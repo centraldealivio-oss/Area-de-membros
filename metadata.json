@@ -1,0 +1,6 @@
+{
+  "name": "Antes da Explosão - Área de Membros",
+  "description": "Área de Membros VIP com acesso por token, audiobook interativo, neurociência dos relacionamentos e módulos de bônus upsell.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
