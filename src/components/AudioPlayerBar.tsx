@@ -51,6 +51,16 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const currentChunkIndexRef = useRef<number>(0);
   const textChunksRef = useRef<string[]>([]);
+  
+  // Strict refs to prevent voice switching and pause bugs across async events
+  const selectedVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const isPlayingRef = useRef<boolean>(false);
+  const isPausedRef = useRef<boolean>(false);
+
+  // Synchronize state with ref
+  useEffect(() => {
+    selectedVoiceRef.current = selectedVoice;
+  }, [selectedVoice]);
 
   // Load available PT voices asynchronously
   useEffect(() => {
@@ -71,7 +81,10 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
       });
 
       setAvailableVoices(sorted);
-      if (sorted.length > 0 && !selectedVoice) {
+      
+      // Lock default voice once on initial load
+      if (sorted.length > 0 && !selectedVoiceRef.current) {
+        selectedVoiceRef.current = sorted[0];
         setSelectedVoice(sorted[0]);
       }
     };
@@ -101,6 +114,9 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   }, [currentTopic.id]);
 
   const stopAudio = () => {
+    isPlayingRef.current = false;
+    isPausedRef.current = true;
+
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
@@ -122,12 +138,16 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   const playAudio = () => {
     if (typeof window === 'undefined') return;
 
+    isPlayingRef.current = true;
+    isPausedRef.current = false;
+    setIsPlaying(true);
+
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
 
       const cleanedText = prepareTextForSpeech(currentTopic.transcript || currentTopic.description);
       
-      // Break into natural sentences for clean, un-glitched speech execution
+      // Break into natural sentences for clean speech execution
       const chunks = cleanedText
         .split(/(?<=[.!?])\s+/)
         .filter(c => c.trim().length > 0);
@@ -135,7 +155,6 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
       textChunksRef.current = chunks.length > 0 ? chunks : [cleanedText];
 
       speakChunkFromIndex(currentChunkIndexRef.current);
-      setIsPlaying(true);
 
       // Smooth progress bar calculation
       const totalDurationSec = (currentTopic.durationMinutes * 60) / playbackSpeed;
@@ -144,6 +163,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
+        if (isPausedRef.current || !isPlayingRef.current) return;
         setProgressPercent(prev => {
           if (prev >= 100) {
             clearInterval(timerRef.current!);
@@ -155,13 +175,13 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
     } else {
       // Simulation mode
-      setIsPlaying(true);
       let p = progressPercent;
       timerRef.current = setInterval(() => {
         p += 2;
         if (p >= 100) {
           p = 100;
           setIsPlaying(false);
+          isPlayingRef.current = false;
           clearInterval(timerRef.current!);
           if (onTopicComplete) onTopicComplete(currentTopic.id);
         }
@@ -171,8 +191,11 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   };
 
   const speakChunkFromIndex = (index: number) => {
+    if (!isPlayingRef.current || isPausedRef.current) return;
+
     if (index >= textChunksRef.current.length) {
       setIsPlaying(false);
+      isPlayingRef.current = false;
       setProgressPercent(100);
       currentChunkIndexRef.current = 0;
       if (onTopicComplete) onTopicComplete(currentTopic.id);
@@ -183,25 +206,30 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     const chunkText = textChunksRef.current[index];
 
     const utterance = new SpeechSynthesisUtterance(chunkText);
-    utterance.lang = 'pt-BR';
-    utterance.rate = playbackSpeed * 0.93; // Human narrative pace
+    utterance.lang = selectedVoiceRef.current?.lang || 'pt-BR';
+    utterance.rate = playbackSpeed * 0.92; // Human narrative pace
     utterance.pitch = 0.98;
 
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
+    // Consistently lock voice reference across every chunk
+    if (selectedVoiceRef.current) {
+      utterance.voice = selectedVoiceRef.current;
     }
 
     utterance.onend = () => {
-      // Continue to next sentence chunk
-      speakChunkFromIndex(index + 1);
+      // ONLY advance if still playing and not paused
+      if (isPlayingRef.current && !isPausedRef.current) {
+        speakChunkFromIndex(index + 1);
+      }
     };
 
     utterance.onerror = () => {
-      // Advance on minor utterance errors
-      if (index + 1 < textChunksRef.current.length) {
-        speakChunkFromIndex(index + 1);
-      } else {
-        setIsPlaying(false);
+      if (isPlayingRef.current && !isPausedRef.current) {
+        if (index + 1 < textChunksRef.current.length) {
+          speakChunkFromIndex(index + 1);
+        } else {
+          setIsPlaying(false);
+          isPlayingRef.current = false;
+        }
       }
     };
 
@@ -209,6 +237,10 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   };
 
   const pauseAudio = () => {
+    isPlayingRef.current = false;
+    isPausedRef.current = true;
+    setIsPlaying(false);
+
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
@@ -216,7 +248,6 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    setIsPlaying(false);
   };
 
   const handleSpeedChange = () => {
@@ -232,6 +263,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   };
 
   const handleSelectVoice = (v: SpeechSynthesisVoice) => {
+    selectedVoiceRef.current = v;
     setSelectedVoice(v);
     setShowVoiceMenu(false);
     if (isPlaying) {

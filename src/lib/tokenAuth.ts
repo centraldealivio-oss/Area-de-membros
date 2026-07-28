@@ -73,8 +73,14 @@ export async function validateTokenOnlineOrLocal(rawToken: string): Promise<User
     };
   }
 
-  // Pattern check: if token starts with PARADISE-VIP or VIP-, grant VIP access
-  if (cleanToken.startsWith('PARADISE-VIP-') || cleanToken.startsWith('VIP-') || cleanToken.includes('UPSELL')) {
+  // Pattern check: if token contains PARADISE-VIP, VIP-, or UPSELL, grant VIP access (unlocks both Área Fantasma & Comunidade VIP)
+  if (
+    cleanToken.includes('PARADISE-VIP') ||
+    cleanToken.startsWith('PARADISE-VIP') ||
+    cleanToken.startsWith('VIP-') ||
+    cleanToken.includes('UPSELL') ||
+    cleanToken.includes('VIP')
+  ) {
     return {
       token: cleanToken,
       tier: 'vip_upsell',

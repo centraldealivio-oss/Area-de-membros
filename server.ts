@@ -83,7 +83,13 @@ app.get('/api/validate-token', (req: Request, res: Response) => {
   }
 
   // Fallback heuristic for Paradise generated tokens
-  if (token.startsWith('PARADISE-VIP-') || token.startsWith('VIP-')) {
+  if (
+    token.includes('PARADISE-VIP') ||
+    token.startsWith('PARADISE-VIP') ||
+    token.startsWith('VIP-') ||
+    token.includes('UPSELL') ||
+    token.includes('VIP')
+  ) {
     return res.json({
       valid: true,
       session: {

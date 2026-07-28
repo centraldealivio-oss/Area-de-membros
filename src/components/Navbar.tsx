@@ -6,6 +6,7 @@
 import React from 'react';
 import { UserSession } from '../types';
 import { ShieldCheck, Lock, Sparkles, LogOut, Terminal, Server, ExternalLink, Flame, MessageSquare, Users } from 'lucide-react';
+import { MAIN_COVER_IMAGE } from '../data/bonusData';
 
 interface NavbarProps {
   session: UserSession;
