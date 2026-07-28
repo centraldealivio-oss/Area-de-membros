@@ -70,16 +70,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           <div className="my-6 relative flex justify-center">
             <div className="relative group max-w-[220px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 transition-transform duration-500 hover:scale-105">
               <img
-                src="/images/cover_antes_da_explosao.jpg"
+                src={MAIN_COVER_IMAGE}
                 alt="Livro Antes da Explosão"
                 className="w-full h-auto object-cover"
                 referrerPolicy="no-referrer"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  if (target.src !== MAIN_COVER_IMAGE && MAIN_COVER_IMAGE) {
-                    target.src = MAIN_COVER_IMAGE;
-                  }
-                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
             </div>

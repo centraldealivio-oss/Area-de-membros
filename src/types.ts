@@ -75,3 +75,25 @@ export interface TriggerQuizResult {
   score: Record<string, number>;
   advice: string;
 }
+
+export interface CommunityComment {
+  id: string;
+  authorName: string;
+  isAnonymous?: boolean;
+  content: string;
+  createdAt: string;
+  likesCount: number;
+}
+
+export interface CommunityPost {
+  id: string;
+  authorName: string;
+  isAnonymous?: boolean;
+  category: 'neurociencia' | 'bpm100' | 'scripts' | 'relatos' | 'geral';
+  title: string;
+  content: string;
+  createdAt: string;
+  likesCount: number;
+  isPinned?: boolean;
+  comments: CommunityComment[];
+}

@@ -102,12 +102,6 @@ export const GhostAreaUpsell: React.FC<GhostAreaUpsellProps> = ({ onUpgradeSucce
                   alt={bonus.title}
                   className="w-full h-full object-cover filter contrast-105 group-hover:scale-105 transition-transform duration-500"
                   referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (bonus.id === 'bonus-1') target.src = '/images/cover_protocolo_100_bpm.jpg';
-                    if (bonus.id === 'bonus-2') target.src = '/images/cover_raio_x_gatilho.jpg';
-                    if (bonus.id === 'bonus-3') target.src = '/images/cover_blindagem_vinculo.jpg';
-                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#121214] via-transparent to-black/30" />
               </div>

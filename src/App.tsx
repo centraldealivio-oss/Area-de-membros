@@ -23,6 +23,7 @@ import { ModuleAccordion } from './components/ModuleAccordion';
 import { TopicView } from './components/TopicView';
 import { GhostAreaUpsell } from './components/GhostAreaUpsell';
 import { BonusArea } from './components/BonusArea';
+import { VipCommunityArea } from './components/VipCommunityArea';
 import { ParadiseSimulatorModal } from './components/ParadiseSimulatorModal';
 import { VercelDeploymentGuideModal } from './components/VercelDeploymentGuideModal';
 import { Sparkles, BookOpen, Flame, Lock, ArrowUpRight } from 'lucide-react';
@@ -30,7 +31,7 @@ import { Sparkles, BookOpen, Flame, Lock, ArrowUpRight } from 'lucide-react';
 export default function App() {
   const [session, setSession] = useState<UserSession | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'curso' | 'bonuses'>('curso');
+  const [activeTab, setActiveTab] = useState<'curso' | 'bonuses' | 'community'>('curso');
 
   // Selected Module & Topic
   const [selectedModule, setSelectedModule] = useState<CourseModule>(COURSE_MODULES[0]);
@@ -248,6 +249,17 @@ export default function App() {
               />
             )}
           </div>
+        )}
+
+        {/* TAB 3: COMUNIDADE EXCLUSIVA VIP */}
+        {activeTab === 'community' && (
+          <VipCommunityArea
+            session={session}
+            onUpgradeSuccess={(updatedSession) => {
+              saveSession(updatedSession);
+              setSession(updatedSession);
+            }}
+          />
         )}
 
       </main>
