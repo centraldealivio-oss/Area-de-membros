@@ -323,17 +323,10 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-white/5 bg-[#0d0d0f] py-6 text-center text-xs text-gray-500 font-mono">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-3">
           <span>
             © {new Date().getFullYear()} Antes da Explosão • Isabella Xavier
           </span>
-          <button 
-            onClick={() => setShowSimulator(true)} 
-            className="text-gray-600 hover:text-gray-400 text-[10px] underline"
-            title="Acesso de Testes / Simulador"
-          >
-            Dev Tools
-          </button>
         </div>
       </footer>
 

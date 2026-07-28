@@ -5,12 +5,35 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Topic } from '../types';
-import { Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Sparkles, FastForward } from 'lucide-react';
+import { Play, Pause, RotateCcw, RotateCw, Volume2, Sparkles, Mic, Settings2 } from 'lucide-react';
 
 interface AudioPlayerBarProps {
   currentTopic: Topic;
   moduleTitle: string;
   onTopicComplete?: (topicId: string) => void;
+}
+
+// Clean and prepare markdown/raw text into natural spoken Portuguese
+function prepareTextForSpeech(text: string): string {
+  if (!text) return '';
+  return text
+    // Remove markdown formatting
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/#{1,6}\s+/g, '')
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+    .replace(/[`_~]/g, '')
+    // Fix common abbreviations and symbols
+    .replace(/p\.ex\./gi, 'por exemplo')
+    .replace(/vs\./gi, 'versus')
+    .replace(/&\s*/g, 'e ')
+    .replace(/(\d+)\s*min/gi, '$1 minutos')
+    .replace(/(\d+)\s*s/gi, '$1 segundos')
+    // Standardize pauses and punctuation
+    .replace(/[-—–]{2,}/g, ', ')
+    .replace(/\n+/g, '. ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
@@ -21,14 +44,57 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
-  const [isMuted, setIsMuted] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [showVoiceMenu, setShowVoiceMenu] = useState(false);
 
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const currentChunkIndexRef = useRef<number>(0);
+  const textChunksRef = useRef<string[]>([]);
 
-  // Initialize Speech Synthesis for the topic transcript
+  // Load available PT voices asynchronously
   useEffect(() => {
-    // Reset player when topic changes
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const ptVoices = voices.filter(v => 
+        v.lang.toLowerCase().includes('pt') || 
+        v.lang.toLowerCase().includes('br')
+      );
+
+      // Sort by preference (Natural, Google, Microsoft Neural, Apple)
+      const sorted = [...ptVoices].sort((a, b) => {
+        const scoreA = getVoiceScore(a);
+        const scoreB = getVoiceScore(b);
+        return scoreB - scoreA;
+      });
+
+      setAvailableVoices(sorted);
+      if (sorted.length > 0 && !selectedVoice) {
+        setSelectedVoice(sorted[0]);
+      }
+    };
+
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
+  function getVoiceScore(v: SpeechSynthesisVoice): number {
+    const name = v.name.toLowerCase();
+    let score = 0;
+    if (name.includes('natural') || name.includes('online') || name.includes('neural')) score += 100;
+    if (name.includes('google')) score += 80;
+    if (name.includes('microsoft')) score += 60;
+    if (name.includes('francisca') || name.includes('luciana') || name.includes('maria') || name.includes('camila')) score += 40;
+    if (v.lang.toLowerCase() === 'pt-br') score += 50;
+    return score;
+  }
+
+  // Reset player when topic changes
+  useEffect(() => {
     stopAudio();
     setProgressPercent(0);
     setIsPlaying(false);
@@ -42,6 +108,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    currentChunkIndexRef.current = 0;
   };
 
   const togglePlayPause = () => {
@@ -56,68 +123,38 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     if (typeof window === 'undefined') return;
 
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // Stop any ongoing speech
+      window.speechSynthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(currentTopic.transcript);
-      utterance.lang = 'pt-BR';
-      // Soothing rate and pitch for warm human narration
-      utterance.rate = playbackSpeed * 0.92;
-      utterance.pitch = 0.95;
-
-      // Select natural, soft Brazilian Portuguese voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const ptVoices = voices.filter(v => v.lang.includes('pt') || v.lang.includes('PT'));
+      const cleanedText = prepareTextForSpeech(currentTopic.transcript || currentTopic.description);
       
-      // Preferred warm/soft/female voices
-      const preferredVoice = ptVoices.find(v => 
-        v.name.toLowerCase().includes('google') ||
-        v.name.toLowerCase().includes('natural') ||
-        v.name.toLowerCase().includes('francisca') ||
-        v.name.toLowerCase().includes('luciana') ||
-        v.name.toLowerCase().includes('maria') ||
-        v.name.toLowerCase().includes('vitoria') ||
-        v.name.toLowerCase().includes('camila') ||
-        v.name.toLowerCase().includes('heloisa') ||
-        v.name.toLowerCase().includes('leticia')
-      ) || ptVoices[0];
+      // Break into natural sentences for clean, un-glitched speech execution
+      const chunks = cleanedText
+        .split(/(?<=[.!?])\s+/)
+        .filter(c => c.trim().length > 0);
 
-      if (preferredVoice) {
-        utterance.voice = preferredVoice;
-      }
+      textChunksRef.current = chunks.length > 0 ? chunks : [cleanedText];
 
-      utterance.onend = () => {
-        setIsPlaying(false);
-        setProgressPercent(100);
-        if (onTopicComplete) {
-          onTopicComplete(currentTopic.id);
-        }
-      };
-
-      utterance.onerror = () => {
-        setIsPlaying(false);
-      };
-
-      utteranceRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
+      speakChunkFromIndex(currentChunkIndexRef.current);
       setIsPlaying(true);
 
-      // Progress animation fallback timer
-      let currentProgress = progressPercent;
+      // Smooth progress bar calculation
       const totalDurationSec = (currentTopic.durationMinutes * 60) / playbackSpeed;
       const intervalMs = 1000;
       const stepPercent = (100 / totalDurationSec);
 
+      if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
-        currentProgress += stepPercent;
-        if (currentProgress >= 100) {
-          currentProgress = 100;
-          clearInterval(timerRef.current!);
-        }
-        setProgressPercent(Math.min(currentProgress, 100));
+        setProgressPercent(prev => {
+          if (prev >= 100) {
+            clearInterval(timerRef.current!);
+            return 100;
+          }
+          return Math.min(prev + stepPercent, 100);
+        });
       }, intervalMs);
 
     } else {
-      // Fallback simulation mode
+      // Simulation mode
       setIsPlaying(true);
       let p = progressPercent;
       timerRef.current = setInterval(() => {
@@ -133,9 +170,47 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     }
   };
 
+  const speakChunkFromIndex = (index: number) => {
+    if (index >= textChunksRef.current.length) {
+      setIsPlaying(false);
+      setProgressPercent(100);
+      currentChunkIndexRef.current = 0;
+      if (onTopicComplete) onTopicComplete(currentTopic.id);
+      return;
+    }
+
+    currentChunkIndexRef.current = index;
+    const chunkText = textChunksRef.current[index];
+
+    const utterance = new SpeechSynthesisUtterance(chunkText);
+    utterance.lang = 'pt-BR';
+    utterance.rate = playbackSpeed * 0.93; // Human narrative pace
+    utterance.pitch = 0.98;
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    utterance.onend = () => {
+      // Continue to next sentence chunk
+      speakChunkFromIndex(index + 1);
+    };
+
+    utterance.onerror = () => {
+      // Advance on minor utterance errors
+      if (index + 1 < textChunksRef.current.length) {
+        speakChunkFromIndex(index + 1);
+      } else {
+        setIsPlaying(false);
+      }
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   const pauseAudio = () => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.pause();
+      window.speechSynthesis.cancel();
     }
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -145,7 +220,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   };
 
   const handleSpeedChange = () => {
-    const speeds = [0.75, 1.0, 1.25, 1.5, 2.0];
+    const speeds = [0.75, 1.0, 1.25, 1.5];
     const nextIndex = (speeds.indexOf(playbackSpeed) + 1) % speeds.length;
     const newSpeed = speeds[nextIndex];
     setPlaybackSpeed(newSpeed);
@@ -156,16 +231,35 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     }
   };
 
+  const handleSelectVoice = (v: SpeechSynthesisVoice) => {
+    setSelectedVoice(v);
+    setShowVoiceMenu(false);
+    if (isPlaying) {
+      stopAudio();
+      setTimeout(() => playAudio(), 100);
+    }
+  };
+
   const handleRewind10 = () => {
     setProgressPercent(prev => Math.max(0, prev - 10));
+    currentChunkIndexRef.current = Math.max(0, currentChunkIndexRef.current - 2);
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      speakChunkFromIndex(currentChunkIndexRef.current);
+    }
   };
 
   const handleForward10 = () => {
     setProgressPercent(prev => Math.min(100, prev + 10));
+    currentChunkIndexRef.current = Math.min(textChunksRef.current.length - 1, currentChunkIndexRef.current + 2);
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      speakChunkFromIndex(currentChunkIndexRef.current);
+    }
   };
 
   return (
-    <div className="bg-[#121214] border border-white/5 rounded-3xl p-5 sm:p-6 shadow-2xl text-gray-200 mb-8 overflow-hidden">
+    <div className="bg-[#121214] border border-white/5 rounded-3xl p-5 sm:p-6 shadow-2xl text-gray-200 mb-8 overflow-hidden relative">
       <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
         
         {/* Track Metadata */}
@@ -193,7 +287,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           </div>
         </div>
 
-        {/* Player Controls & Waveform */}
+        {/* Player Controls & Voice Selector */}
         <div className="flex items-center justify-center sm:justify-end gap-2 sm:gap-3 w-full lg:w-auto shrink-0 flex-wrap sm:flex-nowrap">
           
           {/* Rewind 10s */}
@@ -237,6 +331,53 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             {playbackSpeed}x
           </button>
 
+          {/* Voice Selector Pill */}
+          {availableVoices.length > 0 && (
+            <div className="relative shrink-0">
+              <button
+                onClick={() => setShowVoiceMenu(!showVoiceMenu)}
+                title="Trocar Voz de Narração"
+                className="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-xs font-mono flex items-center gap-1.5 transition-colors"
+              >
+                <Mic className="w-3.5 h-3.5 text-orange-500" />
+                <span className="text-[11px] max-w-[90px] sm:max-w-[120px] truncate">
+                  {selectedVoice ? selectedVoice.name.replace(/Google|Microsoft|Portuguese|Brazil|pt-BR/gi, '').trim() || 'Voz HD' : 'Voz'}
+                </span>
+                <Settings2 className="w-3 h-3 text-gray-500" />
+              </button>
+
+              {/* Voice Selection Dropdown Menu */}
+              {showVoiceMenu && (
+                <div className="absolute right-0 bottom-full mb-2 w-64 bg-[#18181c] border border-white/10 rounded-2xl p-2 shadow-2xl z-50 max-h-60 overflow-y-auto space-y-1">
+                  <div className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider font-mono border-b border-white/5 mb-1">
+                    Vozes Disponíveis ({availableVoices.length})
+                  </div>
+                  {availableVoices.map((voice, idx) => {
+                    const isSelected = selectedVoice?.name === voice.name;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleSelectVoice(voice)}
+                        className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs flex items-center justify-between transition-colors ${
+                          isSelected
+                            ? 'bg-orange-600/20 border border-orange-500/30 text-orange-400 font-bold'
+                            : 'hover:bg-white/5 text-gray-300'
+                        }`}
+                      >
+                        <span className="truncate pr-2">{voice.name}</span>
+                        {voice.name.toLowerCase().includes('natural') && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 font-mono">
+                            HD
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Animated Waveform Indicator */}
           <div className="hidden xl:flex items-center space-x-1 h-8 px-2.5 py-1 bg-white/5 rounded-xl border border-white/5 shrink-0">
             {[40, 70, 30, 90, 50, 80, 40, 100, 60, 30, 75, 45].map((h, i) => (
@@ -277,3 +418,4 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     </div>
   );
 };
+
