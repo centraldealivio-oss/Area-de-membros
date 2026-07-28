@@ -40,7 +40,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ session, onClose }) 
         {/* Title */}
         <div className="text-center mb-6">
           <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20 mb-2">
-            ✓ PAGAMENTO CONFIRMADO PELA PARADISE
+            ✓ PAGAMENTO CONFIRMADO
           </span>
           <h2 className="text-2xl sm:text-3xl font-bold text-white">
             Bem-vindo ao Antes da <span className="text-orange-500">Explosão</span>

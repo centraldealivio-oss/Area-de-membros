@@ -70,14 +70,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           <div className="my-6 relative flex justify-center">
             <div className="relative group max-w-[220px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 transition-transform duration-500 hover:scale-105">
               <img
-                src={MAIN_COVER_IMAGE}
+                src="/images/cover_antes_da_explosao.jpg"
                 alt="Livro Antes da Explosão"
                 className="w-full h-auto object-cover"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
                   const target = e.currentTarget;
-                  if (!target.src.includes('/images/cover_antes_da_explosao.jpg')) {
-                    target.src = '/images/cover_antes_da_explosao.jpg';
+                  if (target.src !== MAIN_COVER_IMAGE && MAIN_COVER_IMAGE) {
+                    target.src = MAIN_COVER_IMAGE;
                   }
                 }}
               />
@@ -86,7 +86,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           </div>
 
           <div className="text-[11px] text-gray-500 text-center font-mono relative z-10">
-            Acesso exclusivo via Paradise Checkout
+            Acesso exclusivo para alunos — Central de Alívio
           </div>
         </div>
 
@@ -104,7 +104,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               Insira seu Token de Acesso
             </h2>
             <p className="text-xs text-gray-400 mb-6">
-              Digite a chave enviada para seu e-mail após a confirmação da compra no checkout da Paradise.
+              Digite a chave enviada para seu e-mail ou gerada na confirmação da sua compra.
             </p>
 
             {/* Input Form */}
@@ -117,7 +117,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                   type="text"
                   value={inputToken}
                   onChange={(e) => setInputToken(e.target.value)}
-                  placeholder="Ex: PARADISE-VIP-8888 ou PARADISE-STD-1234"
+                  placeholder="Cole aqui o seu token de acesso"
                   className="w-full pl-10 pr-4 py-3.5 bg-[#0d0d0f] border border-white/10 rounded-2xl text-white placeholder-gray-600 focus:outline-none focus:border-orange-500 font-mono text-sm tracking-wide transition-all"
                 />
               </div>
@@ -144,65 +144,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 )}
               </button>
             </form>
-
-            {/* Quick Testing Preset Tokens */}
-            <div className="mt-8 pt-6 border-t border-white/5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-gray-400 font-medium">
-                  Modo de Demonstração Instantânea:
-                </span>
-                <span className="text-[10px] text-orange-500 font-mono font-bold">Clique para testar</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setInputToken('PARADISE-VIP-8888');
-                    handleValidate('PARADISE-VIP-8888');
-                  }}
-                  className="p-3 rounded-2xl bg-orange-600/10 hover:bg-orange-600/20 border border-orange-500/20 text-left transition-all group"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-orange-500 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-orange-500" />
-                      PARADISE-VIP-8888
-                    </span>
-                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">
-                      VIP Upsell
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    Libera o Audiobook + Área Black Edition dos 3 Bônus
-                  </p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setInputToken('PARADISE-STD-1234');
-                    handleValidate('PARADISE-STD-1234');
-                  }}
-                  className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-left transition-all"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">
-                      PARADISE-STD-1234
-                    </span>
-                    <span className="text-[9px] bg-white/10 text-gray-400 px-2 py-0.5 rounded-full font-bold">
-                      Padrão
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    Acesso ao Audiobook Padrão (Sem Bônus)
-                  </p>
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Direct Website Link */}
-          <div className="mt-6 text-center pt-4 border-t border-white/5">
+          <div className="mt-8 text-center pt-6 border-t border-white/5">
             <a
               href="https://centraldealivio.com.br"
               target="_blank"

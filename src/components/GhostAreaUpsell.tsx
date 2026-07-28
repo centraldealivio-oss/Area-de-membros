@@ -161,7 +161,7 @@ export const GhostAreaUpsell: React.FC<GhostAreaUpsellProps> = ({ onUpgradeSucce
         </div>
 
         <h3 className="text-xl font-bold text-white">
-          Já Adquiriu o Upsell na Paradise?
+          Já Adquiriu o Upsell do Módulo Black?
         </h3>
         <p className="text-xs text-gray-400">
           Digite abaixo seu Token VIP ativado para liberar os Bônus imediatamente:
@@ -172,7 +172,7 @@ export const GhostAreaUpsell: React.FC<GhostAreaUpsellProps> = ({ onUpgradeSucce
             type="text"
             value={upgradeTokenInput}
             onChange={(e) => setUpgradeTokenInput(e.target.value)}
-            placeholder="Digite ex: PARADISE-VIP-8888"
+            placeholder="Digite seu token VIP"
             className="flex-1 px-4 py-3 bg-[#0d0d0f] border border-white/10 rounded-2xl text-white placeholder-gray-600 font-mono text-sm focus:outline-none focus:border-orange-500"
           />
           <button
@@ -187,10 +187,6 @@ export const GhostAreaUpsell: React.FC<GhostAreaUpsellProps> = ({ onUpgradeSucce
         {errorMsg && (
           <p className="text-xs text-rose-400 font-medium">{errorMsg}</p>
         )}
-
-        <p className="text-[11px] text-gray-500 font-mono">
-          Dica para testes: utilize o token demo <code className="text-orange-500 font-bold">PARADISE-VIP-8888</code>
-        </p>
       </div>
 
     </div>
