@@ -73,6 +73,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 src={MAIN_COVER_IMAGE}
                 alt="Livro Antes da Explosão"
                 className="w-full h-auto object-cover"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.includes('/images/cover_antes_da_explosao.jpg')) {
+                    target.src = '/images/cover_antes_da_explosao.jpg';
+                  }
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
             </div>
@@ -90,9 +97,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               <span className="text-xs font-bold tracking-widest text-orange-500 uppercase font-mono flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5 text-orange-500" />
                 Validação de Token
-              </span>
-              <span className="text-[11px] px-2.5 py-1 rounded-full bg-white/5 text-gray-400 border border-white/10 font-mono">
-                Integrado à Paradise
               </span>
             </div>
 
@@ -197,15 +201,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* Direct Paradise Link */}
+          {/* Direct Website Link */}
           <div className="mt-6 text-center pt-4 border-t border-white/5">
             <a
-              href={PARADISE_CHECKOUT_URL}
+              href="https://centraldealivio.com.br"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-1.5 text-xs text-orange-500 hover:text-orange-400 font-semibold transition-colors"
             >
-              <span>Ainda não possui acesso? Comprar na Paradise Checkout</span>
+              <span>Ainda não possui acesso? Adquirir em centraldealivio.com.br</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>

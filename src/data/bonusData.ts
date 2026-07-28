@@ -4,8 +4,12 @@
  */
 
 import { Bonus } from '../types';
+import coverAntesDaExplosao from '../assets/images/cover_antes_da_explosao_1785165598731.jpg';
+import coverProtocolo100Bpm from '../assets/images/cover_protocolo_100_bpm_1785165612859.jpg';
+import coverRaioXGatilho from '../assets/images/cover_raio_x_gatilho_1785165634602.jpg';
+import coverBlindagemVinculo from '../assets/images/cover_blindagem_vinculo_1785165652252.jpg';
 
-export const MAIN_COVER_IMAGE = '/src/assets/images/cover_antes_da_explosao_1785165598731.jpg';
+export const MAIN_COVER_IMAGE = coverAntesDaExplosao;
 
 export const UPSELL_BONUSES: Bonus[] = [
   {
@@ -15,7 +19,7 @@ export const UPSELL_BONUSES: Bonus[] = [
     badge: 'BÔNUS EXCLUSIVO 1',
     subtitle: 'Para Acalmar o Coração e Recuperar o Controle',
     tagline: 'Quando a briga esquenta e o corpo entra em alarme',
-    coverImage: '/src/assets/images/cover_protocolo_100_bpm_1785165612859.jpg',
+    coverImage: '/images/cover_protocolo_100_bpm.jpg' || coverProtocolo100Bpm,
     description: 'Guia prático e bio-feedback visual interativo para reduzir a frequência cardíaca para menos de 100 BPM durante crises agudas de discussão, ativando o Nervo Vago e devolvendo o controle pré-frontal.',
     highlights: [
       'Visualizador de Respiração Bio-Feedback (Ritmo 4-7-8 & Box Breathing)',
@@ -30,7 +34,7 @@ export const UPSELL_BONUSES: Bonus[] = [
     badge: 'BÔNUS EXCLUSIVO 2',
     subtitle: 'Identifique o que Dispara. Transforme o que te Trava.',
     tagline: 'O Mapeador Neuro-Comportamental de Ciúmes e Inseguranças',
-    coverImage: '/src/assets/images/cover_raio_x_gatilho_1785165634602.jpg',
+    coverImage: '/images/cover_raio_x_gatilho.jpg' || coverRaioXGatilho,
     description: 'Ferramenta interativa de diagnóstico de perfil de apego e teste de gatilhos inconscientes. Saiba exatamente o que ativa seu estado de alerta antes que vire ciúme destrutivo.',
     highlights: [
       'Teste Interativo de Mapeamento de Apego (6 Pergunta Diagnósticas)',
@@ -45,7 +49,7 @@ export const UPSELL_BONUSES: Bonus[] = [
     badge: 'BÔNUS EXCLUSIVO 3',
     subtitle: 'Fortaleça o que te Sustenta. Blinde o que te Transforma.',
     tagline: 'Proteja o que Já Funciona e Crie Acordos Inquebráveis',
-    coverImage: '/src/assets/images/cover_blindagem_vinculo_1785165652252.jpg',
+    coverImage: '/images/cover_blindagem_vinculo.jpg' || coverBlindagemVinculo,
     description: 'Manual de frases prontas para desescalar brigas, reparar a confiança abalada e construir um Contrato de Limites Saudáveis para o casal.',
     highlights: [
       'Biblioteca de Scripts de Desarme: "Como voltar atrás sem parecer fraco"',

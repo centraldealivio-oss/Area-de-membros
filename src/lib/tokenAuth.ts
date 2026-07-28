@@ -5,7 +5,7 @@
 
 import { UserSession, AccessTier, TokenInfo } from '../types';
 
-export const PARADISE_CHECKOUT_URL = 'https://multi.paradisepags.com/';
+export const PARADISE_CHECKOUT_URL = 'https://centraldealivio.com.br';
 
 const SESSION_KEY = 'ade_members_session_v1';
 const COMPLETED_TOPICS_KEY = 'ade_completed_topics_v1';

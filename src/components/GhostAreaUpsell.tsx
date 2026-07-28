@@ -74,7 +74,7 @@ export const GhostAreaUpsell: React.FC<GhostAreaUpsellProps> = ({ onUpgradeSucce
               className="w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-sm bg-orange-600 text-white hover:bg-orange-500 transition-all shadow-lg shadow-orange-600/30 flex items-center justify-center space-x-2.5"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Garantir Upgrade na Paradise Checkout</span>
+              <span>Garantir Upgrade em centraldealivio.com.br</span>
               <ExternalLink className="w-4 h-4 ml-1" />
             </a>
           </div>
@@ -101,6 +101,13 @@ export const GhostAreaUpsell: React.FC<GhostAreaUpsellProps> = ({ onUpgradeSucce
                   src={bonus.coverImage}
                   alt={bonus.title}
                   className="w-full h-full object-cover filter contrast-105 group-hover:scale-105 transition-transform duration-500"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (bonus.id === 'bonus-1') target.src = '/images/cover_protocolo_100_bpm.jpg';
+                    if (bonus.id === 'bonus-2') target.src = '/images/cover_raio_x_gatilho.jpg';
+                    if (bonus.id === 'bonus-3') target.src = '/images/cover_blindagem_vinculo.jpg';
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#121214] via-transparent to-black/30" />
               </div>
