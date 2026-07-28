@@ -21,7 +21,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const handleValidate = async (tokenToTest?: string) => {
     const token = (tokenToTest || inputToken).trim();
     if (!token) {
-      setErrorMsg('Por favor, informe seu token de acesso da Paradise.');
+      setErrorMsg('Por favor, informe seu token de acesso.');
       return;
     }
 
@@ -33,7 +33,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       if (session) {
         onLoginSuccess(session, true);
       } else {
-        setErrorMsg('Token de acesso não encontrado. Verifique a chave enviada no seu e-mail da Paradise.');
+        setErrorMsg('Token de acesso não encontrado. Verifique a chave enviada no seu e-mail.');
       }
     } catch (err) {
       setErrorMsg('Erro de conexão ao validar token. Tente novamente.');
@@ -66,26 +66,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             </p>
           </div>
 
-          {/* Book Cover Image Render */}
-          <div className="my-6 relative flex justify-center">
-            <div className="relative group max-w-[220px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 transition-transform duration-500 hover:scale-105">
-              <img
-                src={MAIN_COVER_IMAGE}
-                alt="Livro Antes da Explosão"
-                className="w-full h-auto object-cover"
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  if (!target.src.endsWith('/images/cover_antes_da_explosao.jpg')) {
-                    target.src = '/images/cover_antes_da_explosao.jpg';
-                  }
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-            </div>
-          </div>
-
-          <div className="text-[11px] text-gray-500 text-center font-mono relative z-10">
+          <div className="text-[11px] text-gray-500 text-center font-mono relative z-10 my-auto py-6">
             Acesso exclusivo para alunos — Central de Alívio
           </div>
         </div>

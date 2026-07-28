@@ -26,6 +26,7 @@ import { BonusArea } from './components/BonusArea';
 import { VipCommunityArea } from './components/VipCommunityArea';
 import { ParadiseSimulatorModal } from './components/ParadiseSimulatorModal';
 import { VercelDeploymentGuideModal } from './components/VercelDeploymentGuideModal';
+import { MAIN_COVER_IMAGE } from './data/bonusData';
 import { Sparkles, BookOpen, Flame, Lock, ArrowUpRight } from 'lucide-react';
 
 export default function App() {
@@ -155,16 +156,35 @@ export default function App() {
             <div className="md:col-span-4 lg:col-span-4 space-y-6">
               
               {/* Course Overview Card */}
-              <div className="bg-[#121214] border border-white/5 rounded-3xl p-6 relative overflow-hidden shadow-2xl">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2.5 rounded-xl bg-orange-600/20 border border-orange-500/20 text-orange-500">
-                    <BookOpen className="w-5 h-5" />
+              <div className="bg-[#121214] border border-white/5 rounded-3xl p-5 relative overflow-hidden shadow-2xl space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative group w-20 sm:w-24 shrink-0 rounded-2xl overflow-hidden shadow-xl border border-white/10 transition-transform duration-300 hover:scale-105">
+                    <img
+                      src={MAIN_COVER_IMAGE}
+                      alt="Capa do Livro Antes da Explosão"
+                      className="w-full h-auto object-cover"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.endsWith('/images/cover_antes_da_explosao.jpg')) {
+                          target.src = '/images/cover_antes_da_explosao.jpg';
+                        }
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-white text-base">
+                  <div className="flex-1 min-w-0">
+                    <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-orange-600/10 border border-orange-500/20 text-orange-500 text-[10px] font-bold mb-1">
+                      <Flame className="w-3 h-3 text-orange-500" />
+                      <span>Audiobook & Ebook</span>
+                    </div>
+                    <h3 className="font-bold text-white text-base leading-tight">
                       Antes da <span className="text-orange-500">Explosão</span>
                     </h3>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 mt-1">
+                      Isabella Xavier
+                    </p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
                       5 Módulos • 10 Tópicos
                     </p>
                   </div>
@@ -291,17 +311,13 @@ export default function App() {
           <span>
             © {new Date().getFullYear()} Antes da Explosão • Isabella Xavier
           </span>
-          <span className="flex items-center gap-2 text-gray-400">
-            <span>Integrado a <a href="https://multi.paradisepags.com/" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline font-bold">Paradise Checkout</a></span>
-            <span className="text-gray-700">•</span>
-            <button 
-              onClick={() => setShowSimulator(true)} 
-              className="text-gray-600 hover:text-gray-400 text-[10px] underline"
-              title="Acesso de Testes / Simulador"
-            >
-              Dev Tools
-            </button>
-          </span>
+          <button 
+            onClick={() => setShowSimulator(true)} 
+            className="text-gray-600 hover:text-gray-400 text-[10px] underline"
+            title="Acesso de Testes / Simulador"
+          >
+            Dev Tools
+          </button>
         </div>
       </footer>
 
