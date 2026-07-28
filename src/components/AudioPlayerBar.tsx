@@ -165,13 +165,13 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   };
 
   return (
-    <div className="bg-[#121214] border border-white/5 rounded-3xl p-5 sm:p-6 shadow-2xl text-gray-200 mb-8">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-5">
+    <div className="bg-[#121214] border border-white/5 rounded-3xl p-5 sm:p-6 shadow-2xl text-gray-200 mb-8 overflow-hidden">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
         
         {/* Track Metadata */}
-        <div className="flex items-center space-x-3.5 w-full md:w-auto">
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-orange-600/10 border border-orange-500/20 text-orange-500 shrink-0">
-            <Sparkles className="w-6 h-6" />
+        <div className="flex items-center gap-3.5 w-full lg:flex-1 lg:min-w-0">
+          <div className="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-orange-600/10 border border-orange-500/20 text-orange-500 shrink-0">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
             {isPlaying && (
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
@@ -180,12 +180,12 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             )}
           </div>
 
-          <div className="overflow-hidden">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-orange-500 font-mono block">
+          <div className="min-w-0 flex-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-orange-500 font-mono block truncate">
               Audiobook Narrado • {moduleTitle}
             </span>
             <h4 className="font-bold text-sm sm:text-base text-white truncate">
-              Tópico {currentTopic.number}: {currentTopic.title}
+              {currentTopic.title}
             </h4>
             <p className="text-xs text-gray-400 truncate">
               {currentTopic.shortSummary}
@@ -194,27 +194,27 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
         </div>
 
         {/* Player Controls & Waveform */}
-        <div className="flex items-center space-x-3 sm:space-x-4 w-full md:w-auto justify-center">
+        <div className="flex items-center justify-center sm:justify-end gap-2 sm:gap-3 w-full lg:w-auto shrink-0 flex-wrap sm:flex-nowrap">
           
           {/* Rewind 10s */}
           <button
             onClick={handleRewind10}
             title="Voltar 10 segundos"
-            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition-colors text-xs font-mono flex items-center space-x-1"
+            className="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition-colors text-xs font-mono flex items-center gap-1 shrink-0"
           >
             <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
-            <span className="hidden sm:inline">10s</span>
+            <span className="text-[11px]">10s</span>
           </button>
 
           {/* Main Play/Pause Button */}
           <button
             onClick={togglePlayPause}
-            className="relative flex items-center justify-center w-14 h-14 rounded-full bg-orange-600 text-white font-bold hover:bg-orange-500 hover:scale-105 transition-all shadow-2xl shadow-orange-600/40"
+            className="relative flex items-center justify-center w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-orange-600 text-white font-bold hover:bg-orange-500 hover:scale-105 transition-all shadow-xl shadow-orange-600/30 shrink-0"
           >
             {isPlaying ? (
-              <Pause className="w-6 h-6 fill-white" />
+              <Pause className="w-5 h-5 fill-white" />
             ) : (
-              <Play className="w-6 h-6 fill-white ml-0.5" />
+              <Play className="w-5 h-5 fill-white ml-0.5" />
             )}
           </button>
 
@@ -222,9 +222,9 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           <button
             onClick={handleForward10}
             title="Avançar 10 segundos"
-            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition-colors text-xs font-mono flex items-center space-x-1"
+            className="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition-colors text-xs font-mono flex items-center gap-1 shrink-0"
           >
-            <span className="hidden sm:inline">10s</span>
+            <span className="text-[11px]">10s</span>
             <RotateCw className="w-3.5 h-3.5 text-orange-500" />
           </button>
 
@@ -232,27 +232,27 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           <button
             onClick={handleSpeedChange}
             title="Alterar Velocidade de Reprodução"
-            className="px-3 py-1.5 rounded-xl bg-orange-600/10 hover:bg-orange-600/20 text-orange-500 border border-orange-500/20 text-xs font-mono font-bold transition-all"
+            className="px-2.5 py-2 rounded-xl bg-orange-600/10 hover:bg-orange-600/20 text-orange-500 border border-orange-500/20 text-xs font-mono font-bold transition-all shrink-0"
           >
             {playbackSpeed}x
           </button>
-        </div>
 
-        {/* Animated Waveform Indicator */}
-        <div className="hidden lg:flex items-center space-x-1 h-8 px-3 py-1 bg-white/5 rounded-xl border border-white/5">
-          {[40, 70, 30, 90, 50, 80, 40, 100, 60, 30, 75, 45].map((h, i) => (
-            <div
-              key={i}
-              className={`w-1 rounded-full transition-all duration-300 ${
-                isPlaying
-                  ? 'bg-orange-500 animate-pulse'
-                  : 'bg-gray-700'
-              }`}
-              style={{
-                height: isPlaying ? `${Math.max(15, (h * Math.random()) + 20)}%` : `${h}%`
-              }}
-            />
-          ))}
+          {/* Animated Waveform Indicator */}
+          <div className="hidden xl:flex items-center space-x-1 h-8 px-2.5 py-1 bg-white/5 rounded-xl border border-white/5 shrink-0">
+            {[40, 70, 30, 90, 50, 80, 40, 100, 60, 30, 75, 45].map((h, i) => (
+              <div
+                key={i}
+                className={`w-1 rounded-full transition-all duration-300 ${
+                  isPlaying
+                    ? 'bg-orange-500 animate-pulse'
+                    : 'bg-gray-700'
+                }`}
+                style={{
+                  height: isPlaying ? `${Math.max(15, (h * Math.random()) + 20)}%` : `${h}%`
+                }}
+              />
+            ))}
+          </div>
         </div>
 
       </div>

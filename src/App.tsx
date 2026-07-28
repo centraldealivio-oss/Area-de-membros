@@ -92,6 +92,16 @@ export default function App() {
   const handleSelectTopic = (module: CourseModule, topic: Topic) => {
     setSelectedModule(module);
     setSelectedTopic(topic);
+
+    // Smooth scroll to lesson topic view on mobile devices
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setTimeout(() => {
+        const element = document.getElementById('lesson-topic-view');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
   };
 
   const handleNextTopic = () => {
@@ -153,21 +163,21 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             
             {/* Left Column: Module Navigation Directory */}
-            <div className="md:col-span-4 lg:col-span-4 space-y-6">
+            <div id="modules-directory-list" className="md:col-span-4 lg:col-span-4 space-y-6 scroll-mt-24">
               
               {/* Course Overview Card */}
               <div className="bg-[#121214] border border-white/5 rounded-3xl p-5 relative overflow-hidden shadow-2xl space-y-4">
                 <div className="flex items-center gap-4">
-                  <div className="relative group w-20 sm:w-24 shrink-0 rounded-2xl overflow-hidden shadow-xl border border-white/10 transition-transform duration-300 hover:scale-105">
+                  <div className="relative group w-20 sm:w-24 aspect-[3/4] shrink-0 rounded-2xl overflow-hidden shadow-xl border border-white/10 transition-transform duration-300 hover:scale-105 bg-gray-900">
                     <img
-                      src={MAIN_COVER_IMAGE}
+                      src="/images/cover_antes_da_explosao.jpg"
                       alt="Capa do Livro Antes da Explosão"
-                      className="w-full h-auto object-cover"
+                      className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         const target = e.currentTarget;
-                        if (!target.src.endsWith('/images/cover_antes_da_explosao.jpg')) {
-                          target.src = '/images/cover_antes_da_explosao.jpg';
+                        if (MAIN_COVER_IMAGE && target.src !== MAIN_COVER_IMAGE) {
+                          target.src = MAIN_COVER_IMAGE;
                         }
                       }}
                     />
@@ -237,13 +247,19 @@ export default function App() {
             </div>
 
             {/* Right Column: Selected Topic Main View */}
-            <div className="md:col-span-8 lg:col-span-8">
+            <div id="lesson-topic-view" className="md:col-span-8 lg:col-span-8 scroll-mt-24">
               <TopicView
                 module={selectedModule}
                 topic={selectedTopic}
                 isCompleted={completedTopics.includes(selectedTopic.id)}
                 onToggleComplete={handleToggleTopicComplete}
                 onSelectNextTopic={handleNextTopic}
+                onBackToModules={() => {
+                  const element = document.getElementById('modules-directory-list');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
               />
             </div>
 
