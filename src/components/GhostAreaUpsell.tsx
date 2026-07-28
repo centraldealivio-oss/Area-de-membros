@@ -33,7 +33,7 @@ export const GhostAreaUpsell: React.FC<GhostAreaUpsellProps> = ({ onUpgradeSucce
       if (session && session.tier === 'vip_upsell') {
         onUpgradeSuccess(session.token);
       } else {
-        setErrorMsg('Este token não possui o plano VIP Diamante ativado. Teste com: PARADISE-VIP-8888');
+        setErrorMsg('Este token não possui o acesso VIP ativado. Digite um token VIP válido enviado no seu e-mail.');
       }
     } catch {
       setErrorMsg('Erro ao conectar ao servidor. Tente novamente.');
