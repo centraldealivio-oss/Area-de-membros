@@ -355,7 +355,7 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
           </form>
 
           <p className="text-[11px] text-gray-500 text-center font-mono pt-2">
-            Ainda não possui a versão VIP Black? Adquira a liberação em <a href="https://centraldealivio.com.br" target="_blank" rel="noreferrer" className="text-amber-400 underline">centraldealivio.com.br</a>
+            Ainda não possui a versão VIP Black? Adquira a liberação em <a href="https://mente.centraldealivio.com.br" target="_blank" rel="noreferrer" className="text-amber-400 underline">mente.centraldealivio.com.br</a>
           </p>
         </div>
 

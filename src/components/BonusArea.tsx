@@ -5,17 +5,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { UPSELL_BONUSES } from '../data/bonusData';
-import { Heart, Activity, Shield, Sparkles, Play, Pause, CheckCircle2, RotateCcw, Copy, FileText, Send } from 'lucide-react';
+import { Heart, Activity, Shield, Sparkles, Play, Pause, CheckCircle2, RotateCcw, Copy, FileText, Send, ArrowRight, Clock, Volume2, Sparkle, ShieldCheck, Zap } from 'lucide-react';
 
 export const BonusArea: React.FC = () => {
   const [activeBonusTab, setActiveBonusTab] = useState<'b1' | 'b2' | 'b3'>('b1');
 
-  // --- BONUS 1 STATE (Breathing Protocol) ---
+  // --- BONUS 1 STATE (Breathing Protocol & SOS Audio) ---
   const [isBreathingActive, setIsBreathingActive] = useState(false);
   const [breathPhase, setBreathPhase] = useState<'inspire' | 'hold' | 'expire'>('inspire');
   const [breathTimer, setBreathTimer] = useState(4);
   const [simulatedBpm, setSimulatedBpm] = useState(122);
   const [breathCycleCount, setBreathCycleCount] = useState(0);
+
+  // Audio SOS Simulation State
+  const [isSosAudioPlaying, setIsSosAudioPlaying] = useState(false);
+  const [sosProgress, setSosProgress] = useState(0);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -23,7 +27,6 @@ export const BonusArea: React.FC = () => {
       interval = setInterval(() => {
         setBreathTimer((prev) => {
           if (prev <= 1) {
-            // Switch phase
             if (breathPhase === 'inspire') {
               setBreathPhase('hold');
               return 7;
@@ -33,7 +36,7 @@ export const BonusArea: React.FC = () => {
             } else {
               setBreathPhase('inspire');
               setBreathCycleCount(c => c + 1);
-              setSimulatedBpm(bpm => Math.max(68, bpm - 9));
+              setSimulatedBpm(bpm => Math.max(65, bpm - 8));
               return 4;
             }
           }
@@ -49,36 +52,111 @@ export const BonusArea: React.FC = () => {
     };
   }, [isBreathingActive, breathPhase]);
 
+  // Handle SOS Audio Player with real soothing voice narration
+  const toggleSosAudio = () => {
+    if (isSosAudioPlaying) {
+      setIsSosAudioPlaying(false);
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    } else {
+      setIsSosAudioPlaying(true);
+      setSosProgress(0);
+
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+
+        const sosText = "Respire fundo. Você está em um ambiente seguro agora. Essa sensação de aperto no peito e essa vontade de reagir no impulso são apenas o seu cérebro em estado de alerta tentando te proteger. Mas você não precisa brigar, chorar ou mandar mensagens no desespero agora. Solte os seus ombros. Deixe o ar sair bem devagar pela sua boca. Lembre-se: qualquer decisão ou resposta tomada com os batimentos acelerados será guiada pela dor, e não pela sua sabedoria. Dê a si mesma vinte minutos de silêncio e calma. Você é dona das suas emoções e é totalmente capaz de proteger o seu coração com paz e serenidade.";
+
+        const utterance = new SpeechSynthesisUtterance(sosText);
+        utterance.lang = 'pt-BR';
+        utterance.rate = 0.88; // Soothing, warm narrative pace
+        utterance.pitch = 1.0;
+
+        const voices = window.speechSynthesis.getVoices();
+        const ptVoices = voices.filter(v => v.lang.toLowerCase().includes('pt') || v.lang.toLowerCase().includes('br'));
+
+        const bestVoice = [...ptVoices].sort((a, b) => {
+          const nameA = a.name.toLowerCase();
+          const nameB = b.name.toLowerCase();
+          let scoreA = 0, scoreB = 0;
+          if (nameA.includes('maria') || nameA.includes('desktop')) scoreA -= 200;
+          if (nameB.includes('maria') || nameB.includes('desktop')) scoreB -= 200;
+          if (nameA.includes('natural') || nameA.includes('online') || nameA.includes('neural')) scoreA += 200;
+          if (nameB.includes('natural') || nameB.includes('online') || nameB.includes('neural')) scoreB += 200;
+          if (nameA.includes('google')) scoreA += 150;
+          if (nameB.includes('google')) scoreB += 150;
+          if (nameA.includes('francisca') || nameA.includes('luciana') || nameA.includes('camila')) scoreA += 100;
+          if (nameB.includes('francisca') || nameB.includes('luciana') || nameB.includes('camila')) scoreB += 100;
+          return scoreB - scoreA;
+        })[0];
+
+        if (bestVoice) {
+          utterance.voice = bestVoice;
+        }
+
+        utterance.onend = () => {
+          setIsSosAudioPlaying(false);
+          setSosProgress(100);
+        };
+
+        utterance.onerror = () => {
+          setIsSosAudioPlaying(false);
+        };
+
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+  };
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if (isSosAudioPlaying) {
+      timer = setInterval(() => {
+        setSosProgress(prev => {
+          if (prev >= 100) {
+            setIsSosAudioPlaying(false);
+            return 100;
+          }
+          return prev + 2;
+        });
+      }, 700);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isSosAudioPlaying]);
+
   // --- BONUS 2 STATE (Quiz Raio-X do Gatilho) ---
   const quizQuestions = [
     {
       id: 1,
-      q: '1. O que você sente fisicamente quando percebe um tom de voz ríspido no parceiro?',
+      q: '1. O que você sente no corpo quando percebe um tom de voz ríspido ou distante do parceiro?',
       options: [
-        { label: 'Aperto imediato no peito e vontade urgente de exigir explicação', type: 'ansioso' },
-        { label: 'Tensão nos ombros, estômago fechado e vontade de se isolar', type: 'evitativo' },
-        { label: 'Onda de raiva seguida de vontade de se aproximar e afastar', type: 'desorganizado' },
-        { label: 'Mente entra em parafuso tentando analisar todas as causas possíveis', type: 'trava' }
+        { label: 'Aperto imediato no peito, taquicardia e vontade urgente de exigir explicações', type: 'ansioso' },
+        { label: 'Tensão nos ombros, nó na garganta e vontade de se isolar e calar', type: 'evitativo' },
+        { label: 'Onda de raiva súbita seguida de confusão e vontade de brigar e fugir ao mesmo tempo', type: 'desorganizado' },
+        { label: 'Mente em parafuso tentando analisar exaustivamente onde você errou', type: 'trava' }
       ]
     },
     {
       id: 2,
-      q: '2. Qual é sua reação automática quando uma briga começa no WhatsApp?',
+      q: '2. Qual é sua reação automática quando uma discussão começa no WhatsApp?',
       options: [
-        { label: 'Mando mensagens longas seguidas tentando fazer o outro entender agora', type: 'ansioso' },
-        { label: 'Paro de responder ou desligo o celular para não ler mais nada', type: 'evitativo' },
-        { label: 'Digito textos duros, depois apago, peço desculpas e sumo em seguida', type: 'desorganizado' },
-        { label: 'Releio a conversa 20 vezes sem conseguir decidir o que responder', type: 'trava' }
+        { label: 'Envio várias mensagens longas tentando fazer o outro entender meu lado agora', type: 'ansioso' },
+        { label: 'Paro de responder imediatamente ou coloco o celular no modo avião', type: 'evitativo' },
+        { label: 'Digito textos duros, depois apago, peço desculpas e me afasto magoada', type: 'desorganizado' },
+        { label: 'Releio as mensagens dezenas de vezes sem conseguir decidir o que escrever', type: 'trava' }
       ]
     },
     {
       id: 3,
-      q: '3. Diante de um momento de ciúmes, qual é seu maior medo inconsciente?',
+      q: '3. Diante de um momento de insegurança ou ciúmes, qual é seu maior medo inconsciente?',
       options: [
-        { label: 'Ser trocado ou abandonado por alguém melhor', type: 'ansioso' },
-        { label: 'Perder minha liberdade e ser sufocado/controlado', type: 'evitativo' },
-        { label: 'Ser enganado e passar por ingênuo/tolo', type: 'desorganizado' },
-        { label: 'Tomar uma atitude errada e estragar tudo sem querer', type: 'trava' }
+        { label: 'Ser trocada, rejeitada ou abandonada por alguém melhor', type: 'ansioso' },
+        { label: 'Perder minha liberdade, paz de espírito e ser sufocada', type: 'evitativo' },
+        { label: 'Ser enganada, passar por ingênua e ter minha confiança pisoteada', type: 'desorganizado' },
+        { label: 'Tomar uma atitude errada no impulso e estragar o relacionamento', type: 'trava' }
       ]
     }
   ];
@@ -105,10 +183,10 @@ export const BonusArea: React.FC = () => {
     });
 
     const resultDescriptions: Record<string, string> = {
-      ansioso: 'Perfil Hiper-Vigilante (Ansioso): Seu sistema límbico responde com medo de abandono. Seu gatilho ativa cobrança imediata. Ação: Usar o Protocolo de Pausa de 20 min antes de enviar mensagens.',
-      evitativo: 'Perfil Desconectado (Evitativo): Seu sistema límbico responde com medo de sufocamento. Seu gatilho ativa a fuga. Ação: Avisar antes de se afastar: "Preciso de 20 min, mas não estou te abandonando".',
-      desorganizado: 'Perfil Oscilante (Desorganizado): Seu cérebro alterna entre busca urgente por afeto e repulsa imediata por medo de traição. Ação: Nomear o conflito em voz baixa.',
-      trava: 'Perfil Trava por Análise: Você gasta tanta energia no córtex racional tentando entender que congela a ação. Ação: Focar na sensação somática do corpo.'
+      ansioso: '🌸 Perfil Hiper-Vigilante (Apego Ansioso): Seu sistema nervoso reage ao menor sinal de distanciamento com medo de rejeição. Seu gatilho ativa a cobrança e o desespero por respostas. Ação Imediata: Ativar o Protocolo de Pausa de 20 min antes de mandar mensagens e focar na respiração 4-7-8.',
+      evitativo: '🛡️ Perfil Protetor/Evitativo: Seu sistema nervoso reage à sobrecarga emocional com medo de invasão e sufocamento. Seu gatilho ativa a desconexão rápida. Ação Imediata: Avisar em tom suave: "Preciso de 20 min para me acalmar, mas estou aqui e não vou te abandonar".',
+      desorganizado: '🔥 Perfil Oscilante Emocional: Seu cérebro alterna entre busca urgente por acolhimento e medo de traição. Ação Imediata: Dizer em voz alta "Eu estou segura agora, não preciso agir no impulso".',
+      trava: '💡 Perfil Análise & Congelamento: Você consome energia no racional tentando entender tudo, ficando paralisada. Ação Imediata: Voltar ao corpo físico com uma caminhada ou copo de água gelada.'
     };
 
     setQuizResult(resultDescriptions[topType] || resultDescriptions.ansioso);
@@ -125,11 +203,11 @@ export const BonusArea: React.FC = () => {
 Partes: Eu e ${partnerName || '[Nome do Parceiro(a)]'}
 
 Acordos Inquebráveis em Momentos de Tensão:
-1. ${rulePausa ? '✓ Regra dos 20 Minutos: Se o coração passar dos 100 BPM, qualquer um pode solicitar a pausa sagrada de 20 min sem ser acusado de fuga.' : '✓ Comunicação clara sem interrupção.'}
-2. ${ruleSemGritos ? '✓ Fim do Tom de Ameaça: Nenhum dos dois usará ameaças de término no calor da discussão.' : '✓ Respeito ao tom de voz.'}
-3. ✓ Foco no Problema, Não na Pessoa: Trocar "Você é irresponsável" por "Eu me senti inseguro com essa atitude".
+1. ${rulePausa ? '✓ Regra dos 20 Minutos: Se o coração passar dos 100 BPM ou a conversa virar discussão, qualquer um pode solicitar a pausa de 20 min sem ser acusado de fuga.' : '✓ Comunicação clara com espaço para escuta.'}
+2. ${ruleSemGritos ? '✓ Fim do Tom de Ameaça: Fica proibido usar ameaças de término ou gritos no calor do momento.' : '✓ Respeito ao tom de voz e ritmo.'}
+3. ✓ Foco na Solução, Não na Agressão: Trocar "Você sempre faz isso" por "Eu me senti insegura com essa situação".
 
-Assinado e Válido para a Vida Toda.`;
+Assinado com carinho para proteger nosso relacionamento.`;
 
   const handleCopyAgreement = () => {
     navigator.clipboard.writeText(generatedAgreementText);
@@ -137,300 +215,542 @@ Assinado e Válido para a Vida Toda.`;
     setTimeout(() => setCopiedAgreement(false), 2500);
   };
 
+  const scrollToTool = (tab: 'b1' | 'b2' | 'b3') => {
+    setActiveBonusTab(tab);
+    setTimeout(() => {
+      const el = document.getElementById('interactive-bonus-workspace');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
   return (
-    <div className="space-y-8 animate-fadeIn max-w-6xl mx-auto">
+    <div className="space-y-10 animate-fadeIn max-w-6xl mx-auto pb-12">
       
-      {/* VIP Header Banner */}
-      <div className="bg-gradient-to-r from-[#171306] via-[#221c08] to-[#120f06] border border-amber-500/40 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.2)]">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div>
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Área Fantasma VIP • Liberada com Sucesso</span>
+      {/* Welcoming Header Banner */}
+      <div className="bg-gradient-to-r from-[#1a141b] via-[#241a22] to-[#120e14] border border-rose-500/30 rounded-3xl p-6 sm:p-10 relative overflow-hidden shadow-2xl">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>Área de Bônus Exclusivos • Liberada</span>
             </div>
 
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-100 via-amber-300 to-amber-200 bg-clip-text text-transparent">
-              Ferramentas Exclusivas de Proteção do Vínculo
+            <h2 className="font-serif text-2xl sm:text-4xl font-bold bg-gradient-to-r from-rose-100 via-amber-200 to-rose-200 bg-clip-text text-transparent">
+              Seu Espaço Acolhedor de Proteção & Paz Emocional
             </h2>
 
-            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
-              Estes bônus contêm aplicadores práticos bio-feedback e mapeadores neuro-comportamentais projetados para uso em momentos de emergência emocional.
+            <p className="text-xs sm:text-sm text-gray-300 leading-relaxed pt-1">
+              Ferramentas interativas, áudio SOS emergencial e guias práticos desenvolvidos para acalmar seu coração, desativar gatilhos de ansiedade e proteger o seu relacionamento.
             </p>
           </div>
 
-          {/* Bonus Navigation Tabs */}
-          <div className="flex bg-[#0b0c12] p-1.5 rounded-2xl border border-amber-500/30 shrink-0">
-            <button
-              onClick={() => setActiveBonusTab('b1')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 ${
-                activeBonusTab === 'b1'
-                  ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(212,175,55,0.4)]'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Activity className="w-4 h-4" />
-              <span>Bônus 1: 100 BPM</span>
-            </button>
-
-            <button
-              onClick={() => setActiveBonusTab('b2')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 ${
-                activeBonusTab === 'b2'
-                  ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(212,175,55,0.4)]'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Heart className="w-4 h-4" />
-              <span>Bônus 2: Raio-X</span>
-            </button>
-
-            <button
-              onClick={() => setActiveBonusTab('b3')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 ${
-                activeBonusTab === 'b3'
-                  ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(212,175,55,0.4)]'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Shield className="w-4 h-4" />
-              <span>Bônus 3: Blindagem</span>
-            </button>
+          <div className="bg-[#120f16] p-4 rounded-2xl border border-rose-500/20 text-center shrink-0 w-full sm:w-auto">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-rose-400 block mb-1">Status de Acesso</span>
+            <div className="inline-flex items-center space-x-1.5 text-emerald-400 text-xs font-bold font-mono">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>BLACK EDITION VIP ATIVADO</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* --- BONUS 1: PROTOCOLO 100 BPM (Breathing Trainer) --- */}
-      {activeBonusTab === 'b1' && (
-        <div className="bg-[#0b0d14] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-            <div>
-              <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
-                Bônus 1 • Treinador Bio-Feedback Fisiológico
-              </span>
-              <h3 className="font-serif text-2xl font-bold text-slate-100">
-                Protocolo 100 BPM: Desativação Fisiológica do Flooding
-              </h3>
-            </div>
-
-            <div className="bg-[#121522] px-4 py-2 rounded-xl border border-amber-500/20 text-center">
-              <span className="text-[10px] uppercase font-mono text-slate-400 block">Frequência Cardíaca Simulação</span>
-              <span className={`font-mono text-xl font-bold ${simulatedBpm > 100 ? 'text-rose-400 animate-pulse' : 'text-emerald-400'}`}>
-                {simulatedBpm} BPM {simulatedBpm > 100 ? '⚠️ (FLOODING)' : '✓ (CALMA)'}
-              </span>
-            </div>
-          </div>
-
-          {/* Interactive Breathing Visualizer Circle */}
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="relative flex items-center justify-center">
-              {/* Outer Glow Ring */}
-              <div
-                className={`w-64 h-64 sm:w-72 sm:h-72 rounded-full border-4 flex flex-col items-center justify-center transition-all duration-1000 ${
-                  breathPhase === 'inspire'
-                    ? 'scale-110 border-amber-400 shadow-[0_0_60px_rgba(212,175,55,0.4)] bg-amber-500/10'
-                    : breathPhase === 'hold'
-                    ? 'scale-105 border-indigo-400 shadow-[0_0_40px_rgba(99,102,241,0.3)] bg-indigo-500/10'
-                    : 'scale-90 border-emerald-400 shadow-[0_0_50px_rgba(16,185,129,0.4)] bg-emerald-500/10'
-                }`}
-              >
-                <span className="text-xs font-mono uppercase tracking-widest text-slate-400 mb-1">
-                  {isBreathingActive ? 'Fase Atual:' : 'Pronto para iniciar'}
-                </span>
-
-                <h4 className="font-serif text-2xl font-bold uppercase text-amber-300 tracking-wide">
-                  {isBreathingActive
-                    ? breathPhase === 'inspire'
-                      ? 'INSPIRE LENTAMENTE'
-                      : breathPhase === 'hold'
-                      ? 'SEGURE O AR'
-                      : 'ESPIRE SOLTANDO A TENSÃO'
-                    : 'CLIQUE EM INICIAR'}
-                </h4>
-
-                <span className="font-mono text-4xl font-extrabold text-slate-100 my-2">
-                  {isBreathingActive ? `${breathTimer}s` : '4-7-8'}
-                </span>
-
-                <span className="text-[11px] text-slate-400 font-mono">
-                  Ciclos Concluídos: {breathCycleCount}
-                </span>
-              </div>
-            </div>
-
-            {/* Start / Pause Control */}
-            <div className="mt-8 flex items-center space-x-4">
-              <button
-                onClick={() => setIsBreathingActive(!isBreathingActive)}
-                className="px-8 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 hover:from-amber-400 transition-all shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center space-x-2"
-              >
-                {isBreathingActive ? (
-                  <>
-                    <Pause className="w-4 h-4 fill-slate-950" />
-                    <span>Pausar Respiração</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 fill-slate-950 ml-0.5" />
-                    <span>Iniciar Ritmo 4-7-8</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsBreathingActive(false);
-                  setSimulatedBpm(122);
-                  setBreathCycleCount(0);
-                }}
-                className="p-3 rounded-xl bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800"
-                title="Reiniciar"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+      {/* --- VISUAL OVERVIEW CARDS GRID (Instant Visual Understanding) --- */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-serif text-xl font-bold text-white flex items-center gap-2">
+            <Zap className="w-5 h-5 text-amber-400" />
+            <span>Guia Visual dos Bônus Interativos</span>
+          </h3>
+          <span className="text-xs text-gray-400 font-mono">3 Ferramentas Prontas</span>
         </div>
-      )}
 
-      {/* --- BONUS 2: RAIO-X DO GATILHO (Quiz) --- */}
-      {activeBonusTab === 'b2' && (
-        <div className="bg-[#0b0d14] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
-          <div>
-            <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
-              Bônus 2 • Diagnóstico Neuro-Comportamental
-            </span>
-            <h3 className="font-serif text-2xl font-bold text-slate-100">
-              Raio-X do Gatilho: Teste de Mapeamento de Apego Inconsciente
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Responda às 3 questões abaixo para identificar como a amígdala dispara seu estado de defesa:
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            {quizQuestions.map((q) => (
-              <div key={q.id} className="bg-[#0e1018] p-5 rounded-2xl border border-slate-800 space-y-3">
-                <h4 className="font-serif font-bold text-sm sm:text-base text-amber-200">
-                  {q.q}
-                </h4>
-                <div className="grid grid-cols-1 gap-2">
-                  {q.options.map((opt, i) => {
-                    const isSelected = quizAnswers[q.id] === opt.type;
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => handleSelectQuizOption(q.id, opt.type)}
-                        className={`w-full p-3.5 rounded-xl text-left text-xs font-medium transition-all ${
-                          isSelected
-                            ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50'
-                            : 'bg-[#07080e] text-slate-300 border border-slate-800/80 hover:border-slate-700'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    );
-                  })}
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Card Bônus 1 */}
+          <div 
+            onClick={() => scrollToTool('b1')}
+            className={`group cursor-pointer bg-[#121118] border rounded-3xl p-5 flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] shadow-xl ${
+              activeBonusTab === 'b1' ? 'border-amber-400 shadow-amber-500/10' : 'border-white/10 hover:border-amber-500/40'
+            }`}
+          >
+            <div>
+              <div className="relative mb-4 rounded-2xl overflow-hidden aspect-[16/10] bg-[#09080c] border border-white/10">
+                <img
+                  src={UPSELL_BONUSES[0].coverImage}
+                  alt={UPSELL_BONUSES[0].title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#121118] via-transparent to-black/20" />
+                <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-rose-600/90 text-white text-[10px] font-mono font-bold uppercase tracking-wider backdrop-blur-md">
+                  ÁUDIO & BIO-FEEDBACK
+                </span>
               </div>
-            ))}
+
+              <span className="text-[10px] font-mono font-bold uppercase text-amber-400 block mb-1">
+                BÔNUS 1 • FISIOLÓGICO
+              </span>
+              <h4 className="font-bold text-lg text-white mb-1 group-hover:text-amber-300 transition-colors">
+                {UPSELL_BONUSES[0].title}
+              </h4>
+              <p className="text-xs text-rose-300/90 italic mb-2">
+                "{UPSELL_BONUSES[0].subtitle}"
+              </p>
+              <p className="text-xs text-gray-400 leading-relaxed mb-4 line-clamp-2">
+                {UPSELL_BONUSES[0].description}
+              </p>
+            </div>
 
             <button
-              onClick={handleFinishQuiz}
-              disabled={Object.keys(quizAnswers).length < 3}
-              className="w-full py-4 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 hover:from-amber-400 transition-all disabled:opacity-40"
+              className={`w-full py-3 rounded-2xl font-bold text-xs flex items-center justify-center space-x-2 transition-all ${
+                activeBonusTab === 'b1'
+                  ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20'
+                  : 'bg-white/5 text-amber-300 group-hover:bg-amber-500/20 border border-amber-500/30'
+              }`}
             >
-              Ver Resultado do Raio-X & Script
+              <Activity className="w-4 h-4" />
+              <span>Abrir Bio-Feedback 4-7-8</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
+          </div>
 
-            {quizResult && (
-              <div className="bg-amber-500/10 border border-amber-500/40 p-6 rounded-2xl space-y-3 animate-fadeIn">
-                <div className="flex items-center space-x-2 text-amber-400">
-                  <Sparkles className="w-5 h-5" />
-                  <h4 className="font-serif font-bold text-base">Resultado do Mapeamento</h4>
-                </div>
-                <p className="text-xs sm:text-sm text-amber-100 leading-relaxed font-sans">
-                  {quizResult}
+          {/* Card Bônus 2 */}
+          <div 
+            onClick={() => scrollToTool('b2')}
+            className={`group cursor-pointer bg-[#121118] border rounded-3xl p-5 flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] shadow-xl ${
+              activeBonusTab === 'b2' ? 'border-amber-400 shadow-amber-500/10' : 'border-white/10 hover:border-amber-500/40'
+            }`}
+          >
+            <div>
+              <div className="relative mb-4 rounded-2xl overflow-hidden aspect-[16/10] bg-[#09080c] border border-white/10">
+                <img
+                  src={UPSELL_BONUSES[1].coverImage}
+                  alt={UPSELL_BONUSES[1].title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#121118] via-transparent to-black/20" />
+                <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-indigo-600/90 text-white text-[10px] font-mono font-bold uppercase tracking-wider backdrop-blur-md">
+                  TESTE INTERATIVO
+                </span>
+              </div>
+
+              <span className="text-[10px] font-mono font-bold uppercase text-amber-400 block mb-1">
+                BÔNUS 2 • MAPEMENTO
+              </span>
+              <h4 className="font-bold text-lg text-white mb-1 group-hover:text-amber-300 transition-colors">
+                {UPSELL_BONUSES[1].title}
+              </h4>
+              <p className="text-xs text-rose-300/90 italic mb-2">
+                "{UPSELL_BONUSES[1].subtitle}"
+              </p>
+              <p className="text-xs text-gray-400 leading-relaxed mb-4 line-clamp-2">
+                {UPSELL_BONUSES[1].description}
+              </p>
+            </div>
+
+            <button
+              className={`w-full py-3 rounded-2xl font-bold text-xs flex items-center justify-center space-x-2 transition-all ${
+                activeBonusTab === 'b2'
+                  ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20'
+                  : 'bg-white/5 text-amber-300 group-hover:bg-amber-500/20 border border-amber-500/30'
+              }`}
+            >
+              <Heart className="w-4 h-4" />
+              <span>Iniciar Raio-X do Gatilho</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Card Bônus 3 */}
+          <div 
+            onClick={() => scrollToTool('b3')}
+            className={`group cursor-pointer bg-[#121118] border rounded-3xl p-5 flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] shadow-xl ${
+              activeBonusTab === 'b3' ? 'border-amber-400 shadow-amber-500/10' : 'border-white/10 hover:border-amber-500/40'
+            }`}
+          >
+            <div>
+              <div className="relative mb-4 rounded-2xl overflow-hidden aspect-[16/10] bg-[#09080c] border border-white/10">
+                <img
+                  src={UPSELL_BONUSES[2].coverImage}
+                  alt={UPSELL_BONUSES[2].title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#121118] via-transparent to-black/20" />
+                <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-emerald-600/90 text-white text-[10px] font-mono font-bold uppercase tracking-wider backdrop-blur-md">
+                  GERADOR DE TERMO
+                </span>
+              </div>
+
+              <span className="text-[10px] font-mono font-bold uppercase text-amber-400 block mb-1">
+                BÔNUS 3 • ACORDOS
+              </span>
+              <h4 className="font-bold text-lg text-white mb-1 group-hover:text-amber-300 transition-colors">
+                {UPSELL_BONUSES[2].title}
+              </h4>
+              <p className="text-xs text-rose-300/90 italic mb-2">
+                "{UPSELL_BONUSES[2].subtitle}"
+              </p>
+              <p className="text-xs text-gray-400 leading-relaxed mb-4 line-clamp-2">
+                {UPSELL_BONUSES[2].description}
+              </p>
+            </div>
+
+            <button
+              className={`w-full py-3 rounded-2xl font-bold text-xs flex items-center justify-center space-x-2 transition-all ${
+                activeBonusTab === 'b3'
+                  ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20'
+                  : 'bg-white/5 text-amber-300 group-hover:bg-amber-500/20 border border-amber-500/30'
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              <span>Gerar Contrato de Limites</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      {/* --- INTERACTIVE WORKSPACE SECTION --- */}
+      <div id="interactive-bonus-workspace" className="scroll-mt-28 space-y-6">
+        
+        {/* Navigation Selector Bar */}
+        <div className="flex items-center justify-between bg-[#121118] p-2 rounded-2xl border border-white/10 overflow-x-auto">
+          <button
+            onClick={() => setActiveBonusTab('b1')}
+            className={`px-5 py-3 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shrink-0 ${
+              activeBonusTab === 'b1'
+                ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/30'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Activity className="w-4 h-4" />
+            <span>Ferramenta 1: Protocolo 100 BPM</span>
+          </button>
+
+          <button
+            onClick={() => setActiveBonusTab('b2')}
+            className={`px-5 py-3 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shrink-0 ${
+              activeBonusTab === 'b2'
+                ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/30'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Heart className="w-4 h-4" />
+            <span>Ferramenta 2: Raio-X do Gatilho</span>
+          </button>
+
+          <button
+            onClick={() => setActiveBonusTab('b3')}
+            className={`px-5 py-3 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shrink-0 ${
+              activeBonusTab === 'b3'
+                ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/30'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Shield className="w-4 h-4" />
+            <span>Ferramenta 3: Blindagem do Vínculo</span>
+          </button>
+        </div>
+
+        {/* --- BONUS 1 TOOL WORKSPACE --- */}
+        {activeBonusTab === 'b1' && (
+          <div className="bg-[#100e15] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
+            
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+              <div>
+                <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
+                  Bônus 1 • Treinador Bio-Feedback & Áudio SOS
+                </span>
+                <h3 className="font-serif text-2xl font-bold text-white">
+                  Protocolo 100 BPM: Desativação Fisiológica do Taquicardia
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">
+                  Use durante discussões calorosas ou crises de ansiedade para acalmar a mente e reativar a lógica.
                 </p>
               </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {/* --- BONUS 3: BLINDAGEM DO VÍNCULO (Agreement Builder) --- */}
-      {activeBonusTab === 'b3' && (
-        <div className="bg-[#0b0d14] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
-          <div>
-            <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
-              Bônus 3 • Gerador de Acordos Inquebráveis
-            </span>
-            <h3 className="font-serif text-2xl font-bold text-slate-100">
-              Blindagem do Vínculo: Contrato de Limites Emocionais
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Crie um termo claro com seu parceiro(a) para pausar brigas antes que a explosão destrua a confiança.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Input Options */}
-            <div className="space-y-4 bg-[#0e1018] p-6 rounded-2xl border border-slate-800">
-              <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                  Nome do Parceiro(a):
-                </label>
-                <input
-                  type="text"
-                  value={partnerName}
-                  onChange={(e) => setPartnerName(e.target.value)}
-                  placeholder="Ex: Gabriel / Juliana"
-                  className="w-full px-4 py-3 bg-[#07080e] border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-amber-400"
-                />
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <label className="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={rulePausa}
-                    onChange={(e) => setRulePausa(e.target.checked)}
-                    className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500"
-                  />
-                  <span>Incluir Regra dos 20 Minutos de Pausa Sagrada</span>
-                </label>
-
-                <label className="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={ruleSemGritos}
-                    onChange={(e) => setRuleSemGritos(e.target.checked)}
-                    className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500"
-                  />
-                  <span>Proibir Ameaças de Término no Calor do Momento</span>
-                </label>
+              <div className="bg-[#181422] px-5 py-2.5 rounded-2xl border border-rose-500/30 text-center shrink-0">
+                <span className="text-[10px] uppercase font-mono text-gray-400 block">Frequência Cardíaca Atual</span>
+                <span className={`font-mono text-xl font-bold ${simulatedBpm > 100 ? 'text-rose-400 animate-pulse' : 'text-emerald-400'}`}>
+                  {simulatedBpm} BPM {simulatedBpm > 100 ? '⚠️ (ESTADO DE ALARME)' : '✓ (CALMA ALCANÇADA)'}
+                </span>
               </div>
             </div>
 
-            {/* Generated Agreement Box */}
-            <div className="bg-[#07080d] p-6 rounded-2xl border border-amber-500/30 space-y-4 font-mono text-xs text-amber-200/90 relative">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                <span className="text-[10px] text-amber-400 font-bold uppercase">Pré-visualização do Acordo</span>
+            {/* Audio SOS Emergencial Card */}
+            <div className="bg-[#181420] border border-rose-500/30 rounded-2xl p-5 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
+                    <Volume2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-white">Áudio SOS Emergencial (3 Minutos)</h4>
+                    <p className="text-xs text-gray-400">Escute com fones no meio do conflito para acalmar os batimentos imediatamente</p>
+                  </div>
+                </div>
+
                 <button
-                  onClick={handleCopyAgreement}
-                  className="px-3 py-1 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 text-[10px] font-bold border border-amber-500/30 flex items-center space-x-1"
+                  onClick={toggleSosAudio}
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-500 transition-all shadow-lg shadow-rose-600/30 flex items-center space-x-2 shrink-0"
                 >
-                  <Copy className="w-3 h-3" />
-                  <span>{copiedAgreement ? 'Copiado!' : 'Copiar Texto'}</span>
+                  {isSosAudioPlaying ? (
+                    <>
+                      <Pause className="w-4 h-4 fill-white" />
+                      <span>Pausar Áudio SOS</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 fill-white ml-0.5" />
+                      <span>Ouvir Áudio SOS</span>
+                    </>
+                  )}
                 </button>
               </div>
 
-              <pre className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-amber-100/90">
-                {generatedAgreementText}
-              </pre>
+              {/* SOS Audio Progress */}
+              {isSosAudioPlaying && (
+                <div className="space-y-1 pt-2 animate-fadeIn">
+                  <div className="flex justify-between text-[10px] font-mono text-rose-300">
+                    <span>Narração Calma em Execução...</span>
+                    <span>{sosProgress}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-rose-500 transition-all duration-300" style={{ width: `${sosProgress}%` }} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Interactive Breathing Visualizer Circle */}
+            <div className="flex flex-col items-center justify-center py-6">
+              <div className="relative flex items-center justify-center">
+                {/* Outer Glow Ring */}
+                <div
+                  className={`w-64 h-64 sm:w-72 sm:h-72 rounded-full border-4 flex flex-col items-center justify-center transition-all duration-1000 ${
+                    breathPhase === 'inspire'
+                      ? 'scale-110 border-amber-400 shadow-[0_0_60px_rgba(251,191,36,0.3)] bg-amber-500/10'
+                      : breathPhase === 'hold'
+                      ? 'scale-105 border-indigo-400 shadow-[0_0_40px_rgba(99,102,241,0.3)] bg-indigo-500/10'
+                      : 'scale-90 border-emerald-400 shadow-[0_0_50px_rgba(16,185,129,0.3)] bg-emerald-500/10'
+                  }`}
+                >
+                  <span className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-1">
+                    {isBreathingActive ? 'Fase do Exercício:' : 'Visualizador Prontos'}
+                  </span>
+
+                  <h4 className="font-serif text-xl sm:text-2xl font-bold uppercase text-amber-300 tracking-wide text-center px-4">
+                    {isBreathingActive
+                      ? breathPhase === 'inspire'
+                        ? 'INSPIRE LENTAMENTE'
+                        : breathPhase === 'hold'
+                        ? 'SEGURE O AR'
+                        : 'ESPIRE SOLTANDO A TENSÃO'
+                      : 'CLIQUE EM INICIAR'}
+                  </h4>
+
+                  <span className="font-mono text-4xl font-extrabold text-white my-2">
+                    {isBreathingActive ? `${breathTimer}s` : '4-7-8'}
+                  </span>
+
+                  <span className="text-[11px] text-gray-400 font-mono">
+                    Ciclos Concluídos: {breathCycleCount}
+                  </span>
+                </div>
+              </div>
+
+              {/* Start / Pause Control */}
+              <div className="mt-8 flex items-center space-x-4">
+                <button
+                  onClick={() => setIsBreathingActive(!isBreathingActive)}
+                  className="px-8 py-3.5 rounded-2xl font-bold text-sm bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 hover:from-amber-300 transition-all shadow-lg shadow-amber-500/20 flex items-center space-x-2"
+                >
+                  {isBreathingActive ? (
+                    <>
+                      <Pause className="w-4 h-4 fill-slate-950" />
+                      <span>Pausar Exercício</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 fill-slate-950 ml-0.5" />
+                      <span>Iniciar Ritmo Guiado 4-7-8</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsBreathingActive(false);
+                    setSimulatedBpm(122);
+                    setBreathCycleCount(0);
+                  }}
+                  className="p-3.5 rounded-2xl bg-white/5 text-gray-400 hover:text-white border border-white/10"
+                  title="Reiniciar Simulação"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* --- BONUS 2 TOOL WORKSPACE --- */}
+        {activeBonusTab === 'b2' && (
+          <div className="bg-[#100e15] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
+            <div>
+              <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
+                Bônus 2 • Diagnosticador Neuro-Comportamental
+              </span>
+              <h3 className="font-serif text-2xl font-bold text-white">
+                Raio-X do Gatilho: Mapeamento de Inseguranças
+              </h3>
+              <p className="text-xs text-gray-400 mt-1">
+                Responda às 3 perguntas abaixo para descobrir como seu cérebro aciona o alerta de defesa e como desativá-lo.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              {quizQuestions.map((q) => (
+                <div key={q.id} className="bg-[#16131d] p-6 rounded-2xl border border-white/10 space-y-4">
+                  <h4 className="font-serif font-bold text-sm sm:text-base text-amber-200">
+                    {q.q}
+                  </h4>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {q.options.map((opt, i) => {
+                      const isSelected = quizAnswers[q.id] === opt.type;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => handleSelectQuizOption(q.id, opt.type)}
+                          className={`w-full p-4 rounded-xl text-left text-xs font-medium transition-all flex items-center justify-between ${
+                            isSelected
+                              ? 'bg-amber-500/20 text-amber-200 border-2 border-amber-400 shadow-md'
+                              : 'bg-[#0c0a10] text-gray-300 border border-white/5 hover:border-white/20'
+                          }`}
+                        >
+                          <span className="pr-3 leading-relaxed">{opt.label}</span>
+                          {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={handleFinishQuiz}
+                disabled={Object.keys(quizAnswers).length < 3}
+                className="w-full py-4 rounded-2xl font-bold text-sm bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 hover:from-amber-300 transition-all disabled:opacity-40 shadow-xl shadow-amber-500/20 flex items-center justify-center space-x-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Gerar Diagnóstico Personalizado</span>
+              </button>
+
+              {quizResult && (
+                <div className="bg-gradient-to-r from-amber-500/15 via-[#1a1520] to-rose-500/15 border border-amber-500/40 p-6 sm:p-8 rounded-3xl space-y-4 animate-fadeIn shadow-2xl">
+                  <div className="flex items-center space-x-2 text-amber-300">
+                    <Sparkles className="w-5 h-5 text-amber-400" />
+                    <h4 className="font-serif font-bold text-lg">Resultado do Seu Raio-X Emocional</h4>
+                  </div>
+                  <p className="text-xs sm:text-sm text-amber-100 leading-relaxed font-sans bg-black/40 p-5 rounded-2xl border border-amber-500/20">
+                    {quizResult}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* --- BONUS 3 TOOL WORKSPACE --- */}
+        {activeBonusTab === 'b3' && (
+          <div className="bg-[#100e15] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
+            <div>
+              <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
+                Bônus 3 • Gerador de Acordo Inquebrável
+              </span>
+              <h3 className="font-serif text-2xl font-bold text-white">
+                Blindagem do Vínculo: Termo de Limites Saudáveis
+              </h3>
+              <p className="text-xs text-gray-400 mt-1">
+                Crie um acordo claro e afetuoso para ser compartilhado no WhatsApp ou guardado com o casal.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Input Form */}
+              <div className="space-y-5 bg-[#16131d] p-6 rounded-2xl border border-white/10">
+                <div>
+                  <label className="text-xs font-bold text-gray-200 block mb-2">
+                    Nome do Seu Parceiro(a):
+                  </label>
+                  <input
+                    type="text"
+                    value={partnerName}
+                    onChange={(e) => setPartnerName(e.target.value)}
+                    placeholder="Ex: Rodrigo / Lucas / Marcelo"
+                    className="w-full px-4 py-3 bg-[#0a080f] border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <label className="flex items-center space-x-3 text-xs text-gray-300 cursor-pointer p-3 rounded-xl bg-[#0c0a10] border border-white/5 hover:border-amber-500/30">
+                    <input
+                      type="checkbox"
+                      checked={rulePausa}
+                      onChange={(e) => setRulePausa(e.target.checked)}
+                      className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500 w-4 h-4"
+                    />
+                    <span>Incluir Regra dos 20 Minutos de Pausa Sagrada</span>
+                  </label>
+
+                  <label className="flex items-center space-x-3 text-xs text-gray-300 cursor-pointer p-3 rounded-xl bg-[#0c0a10] border border-white/5 hover:border-amber-500/30">
+                    <input
+                      type="checkbox"
+                      checked={ruleSemGritos}
+                      onChange={(e) => setRuleSemGritos(e.target.checked)}
+                      className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500 w-4 h-4"
+                    />
+                    <span>Proibir Ameaças de Término no Calor do Momento</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Document Preview */}
+              <div className="bg-[#0b0910] p-6 rounded-2xl border-2 border-amber-500/40 space-y-4 font-mono text-xs text-amber-200/90 relative shadow-2xl flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-amber-500/20 mb-3">
+                    <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Pré-visualização Oficial</span>
+                    <button
+                      onClick={handleCopyAgreement}
+                      className="px-3.5 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-[10px] hover:bg-amber-300 transition-all shadow-md flex items-center space-x-1"
+                    >
+                      <Copy className="w-3 h-3" />
+                      <span>{copiedAgreement ? 'Copiado!' : 'Copiar Texto'}</span>
+                    </button>
+                  </div>
+
+                  <pre className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-amber-100/90">
+                    {generatedAgreementText}
+                  </pre>
+                </div>
+
+                <div className="pt-4 border-t border-amber-500/20 text-[10px] text-gray-400 text-center italic">
+                  Copie e envie no WhatsApp para firmar o acordo.
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+      </div>
 
     </div>
   );

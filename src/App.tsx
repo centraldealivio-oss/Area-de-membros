@@ -26,7 +26,7 @@ import { BonusArea } from './components/BonusArea';
 import { VipCommunityArea } from './components/VipCommunityArea';
 import { ParadiseSimulatorModal } from './components/ParadiseSimulatorModal';
 import { VercelDeploymentGuideModal } from './components/VercelDeploymentGuideModal';
-import { MAIN_COVER_IMAGE } from './data/bonusData';
+import { MAIN_COVER_IMAGE, FALLBACK_COVER_IMAGE } from './data/bonusData';
 import { Sparkles, BookOpen, Flame, Lock, ArrowUpRight } from 'lucide-react';
 
 export default function App() {
@@ -170,15 +170,12 @@ export default function App() {
                 <div className="flex items-center gap-4">
                   <div className="relative group w-20 sm:w-24 aspect-[3/4] shrink-0 rounded-2xl overflow-hidden shadow-xl border border-white/10 transition-transform duration-300 hover:scale-105 bg-gray-900">
                     <img
-                      src="/images/cover_antes_da_explosao.jpg"
+                      src={MAIN_COVER_IMAGE}
                       alt="Capa do Livro Antes da Explosão"
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
-                        const target = e.currentTarget;
-                        if (MAIN_COVER_IMAGE && target.src !== MAIN_COVER_IMAGE) {
-                          target.src = MAIN_COVER_IMAGE;
-                        }
+                        (e.currentTarget as HTMLImageElement).src = FALLBACK_COVER_IMAGE;
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />

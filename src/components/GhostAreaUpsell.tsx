@@ -74,7 +74,7 @@ export const GhostAreaUpsell: React.FC<GhostAreaUpsellProps> = ({ onUpgradeSucce
               className="w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-sm bg-orange-600 text-white hover:bg-orange-500 transition-all shadow-lg shadow-orange-600/30 flex items-center justify-center space-x-2.5"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Garantir Upgrade em centraldealivio.com.br</span>
+              <span>Garantir Upgrade em mente.centraldealivio.com.br</span>
               <ExternalLink className="w-4 h-4 ml-1" />
             </a>
           </div>

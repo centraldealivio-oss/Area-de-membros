@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { validateTokenOnlineOrLocal, PARADISE_CHECKOUT_URL } from '../lib/tokenAuth';
 import { UserSession } from '../types';
-import { MAIN_COVER_IMAGE } from '../data/bonusData';
+import { MAIN_COVER_IMAGE, FALLBACK_COVER_IMAGE } from '../data/bonusData';
 import { KeyRound, ShieldAlert, ArrowRight, ExternalLink, Sparkles, CheckCircle2, Flame, Lock } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -52,17 +52,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         
         {/* Left Book Graphic Showcase */}
         <div className="md:col-span-5 bg-[#0d0d0f] p-6 sm:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/5 relative">
-          <div className="relative z-10">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-orange-600/10 border border-orange-500/20 text-orange-500 text-xs font-bold mb-4">
+          <div className="relative z-10 space-y-4">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-orange-600/10 border border-orange-500/20 text-orange-500 text-xs font-bold">
               <Flame className="w-3.5 h-3.5 text-orange-500" />
               <span>Área de Membros Restrita</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            <div className="relative mx-auto my-2 w-36 sm:w-40 aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
+              <img
+                src={MAIN_COVER_IMAGE}
+                alt="Livro Antes da Explosão"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = FALLBACK_COVER_IMAGE;
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white text-center">
               Antes da <span className="text-orange-500">Explosão</span>
             </h1>
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              O audiobook & ebook completo sobre a neurociência dos relacionamentos. Entenda o cérebro no conflito, desative gatilhos e evite a explosão.
+            <p className="text-xs text-gray-400 leading-relaxed text-center">
+              O audiobook & ebook completo sobre a neurociência dos relacionamentos. Entenda o cérebro no conflito e evite a explosão.
             </p>
           </div>
 
@@ -130,12 +143,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           {/* Direct Website Link */}
           <div className="mt-8 text-center pt-6 border-t border-white/5">
             <a
-              href="https://centraldealivio.com.br"
+              href="https://mente.centraldealivio.com.br"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-1.5 text-xs text-orange-500 hover:text-orange-400 font-semibold transition-colors"
             >
-              <span>Ainda não possui acesso? Adquirir em centraldealivio.com.br</span>
+              <span>Ainda não possui acesso? Adquirir em mente.centraldealivio.com.br</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>

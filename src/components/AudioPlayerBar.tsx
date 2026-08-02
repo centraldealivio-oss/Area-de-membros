@@ -13,7 +13,7 @@ interface AudioPlayerBarProps {
   onTopicComplete?: (topicId: string) => void;
 }
 
-// Clean and prepare markdown/raw text into natural spoken Portuguese
+// Clean and prepare markdown/raw text into natural, smooth, spoken Portuguese
 function prepareTextForSpeech(text: string): string {
   if (!text) return '';
   return text
@@ -23,17 +23,42 @@ function prepareTextForSpeech(text: string): string {
     .replace(/#{1,6}\s+/g, '')
     .replace(/\[(.*?)\]\(.*?\)/g, '$1')
     .replace(/[`_~]/g, '')
-    // Fix common abbreviations and symbols
+    // Fix common abbreviations and symbols for natural human speech
     .replace(/p\.ex\./gi, 'por exemplo')
     .replace(/vs\./gi, 'versus')
+    .replace(/etc\./gi, 'e assim por diante')
     .replace(/&\s*/g, 'e ')
     .replace(/(\d+)\s*min/gi, '$1 minutos')
     .replace(/(\d+)\s*s/gi, '$1 segundos')
-    // Standardize pauses and punctuation
+    .replace(/%/g, ' por cento')
+    // Introduce gentle pauses
     .replace(/[-—–]{2,}/g, ', ')
     .replace(/\n+/g, '. ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+// Combine sentences into coherent 120-180 char phrases to prevent abrupt pauses between sentences
+function createNaturalPhrases(text: string): string[] {
+  if (!text) return [];
+  const rawSentences = text
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+
+  const phrases: string[] = [];
+  let current = '';
+
+  for (const sentence of rawSentences) {
+    if ((current + ' ' + sentence).length < 170) {
+      current = current ? current + ' ' + sentence : sentence;
+    } else {
+      if (current) phrases.push(current);
+      current = sentence;
+    }
+  }
+  if (current) phrases.push(current);
+  return phrases.length > 0 ? phrases : [text];
 }
 
 export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
@@ -73,7 +98,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
         v.lang.toLowerCase().includes('br')
       );
 
-      // Sort by preference (Natural, Google, Microsoft Neural, Apple)
+      // Sort by preference (Natural, Neural, Female, Google, Microsoft, Apple)
       const sorted = [...ptVoices].sort((a, b) => {
         const scoreA = getVoiceScore(a);
         const scoreB = getVoiceScore(b);
@@ -97,12 +122,31 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
   function getVoiceScore(v: SpeechSynthesisVoice): number {
     const name = v.name.toLowerCase();
+    const lang = v.lang.toLowerCase();
+
+    if (!lang.includes('pt') && !lang.includes('br')) return -200;
+
     let score = 0;
-    if (name.includes('natural') || name.includes('online') || name.includes('neural')) score += 100;
-    if (name.includes('google')) score += 80;
-    if (name.includes('microsoft')) score += 60;
-    if (name.includes('francisca') || name.includes('luciana') || name.includes('maria') || name.includes('camila')) score += 40;
-    if (v.lang.toLowerCase() === 'pt-br') score += 50;
+
+    // Heavily penalize old robotic desktop voices like "Maria", "Helena", "Zira", or "Desktop"
+    if (name.includes('maria') || name.includes('helena') || name.includes('desktop') || name.includes('zira')) {
+      score -= 200;
+    }
+
+    // High priority for True Neural / Online / Natural Voices
+    if (name.includes('natural') || name.includes('online') || name.includes('neural') || name.includes('wavenet') || name.includes('premium')) {
+      score += 250;
+    }
+
+    // Top-tier natural voices: Google Brasil, Francisca Online, Luciana Online, Camila, Apple Siri
+    if (name.includes('google')) score += 180; // "Google português do Brasil" is exceptionally smooth!
+    if (name.includes('francisca') || name.includes('luciana') || name.includes('yolanda') || name.includes('camila') || name.includes('vitoria')) {
+      score += 120;
+    }
+    if (name.includes('apple') || name.includes('siri')) score += 90;
+
+    if (lang === 'pt-br') score += 50;
+
     return score;
   }
 
@@ -147,12 +191,9 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
       const cleanedText = prepareTextForSpeech(currentTopic.transcript || currentTopic.description);
       
-      // Break into natural sentences for clean speech execution
-      const chunks = cleanedText
-        .split(/(?<=[.!?])\s+/)
-        .filter(c => c.trim().length > 0);
-
-      textChunksRef.current = chunks.length > 0 ? chunks : [cleanedText];
+      // Combine into natural flowing phrases (120-170 chars) to prevent abrupt pauses
+      const phrases = createNaturalPhrases(cleanedText);
+      textChunksRef.current = phrases.length > 0 ? phrases : [cleanedText];
 
       speakChunkFromIndex(currentChunkIndexRef.current);
 
@@ -207,8 +248,8 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
     const utterance = new SpeechSynthesisUtterance(chunkText);
     utterance.lang = selectedVoiceRef.current?.lang || 'pt-BR';
-    utterance.rate = playbackSpeed * 0.92; // Human narrative pace
-    utterance.pitch = 0.98;
+    utterance.rate = playbackSpeed * 0.90; // Natural, human-like narration speed
+    utterance.pitch = 1.0; // Warm, natural vocal pitch
 
     // Consistently lock voice reference across every chunk
     if (selectedVoiceRef.current) {

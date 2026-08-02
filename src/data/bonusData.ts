@@ -9,7 +9,8 @@ import coverProtocolo100Bpm from '../assets/images/cover_protocolo_100_bpm_17851
 import coverRaioXGatilho from '../assets/images/cover_raio_x_gatilho_1785165634602.jpg';
 import coverBlindagemVinculo from '../assets/images/cover_blindagem_vinculo_1785165652252.jpg';
 
-export const MAIN_COVER_IMAGE = coverAntesDaExplosao;
+export const FALLBACK_COVER_IMAGE = coverAntesDaExplosao;
+export const MAIN_COVER_IMAGE = 'https://i.ibb.co/N24PyXjK/book-cover.jpg';
 
 export const UPSELL_BONUSES: Bonus[] = [
   {

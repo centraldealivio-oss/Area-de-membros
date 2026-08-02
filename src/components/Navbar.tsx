@@ -6,7 +6,7 @@
 import React from 'react';
 import { UserSession } from '../types';
 import { ShieldCheck, Lock, Sparkles, LogOut, Terminal, Server, ExternalLink, Flame, MessageSquare, Users } from 'lucide-react';
-import { MAIN_COVER_IMAGE } from '../data/bonusData';
+import { MAIN_COVER_IMAGE, FALLBACK_COVER_IMAGE } from '../data/bonusData';
 
 interface NavbarProps {
   session: UserSession;
@@ -40,8 +40,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Brand Logo & Title */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center text-white font-bold text-base shadow-lg shadow-orange-600/20 shrink-0">
-                AE
+              <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center text-white font-bold text-base shadow-lg shadow-orange-600/20 shrink-0 overflow-hidden border border-orange-500/30">
+                <img 
+                  src={MAIN_COVER_IMAGE} 
+                  alt="Antes da Explosão - Livro" 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = FALLBACK_COVER_IMAGE;
+                  }}
+                />
               </div>
               <div>
                 <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-1">
