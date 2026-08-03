@@ -15,7 +15,7 @@ app.use(express.json());
 // In-memory token database (backed by runtime memory)
 interface StoredToken {
   token: string;
-  tier: 'standard' | 'vip_upsell';
+  tier: 'standard' | 'bonus_1' | 'bonus_2' | 'bonus_3' | 'all_bonuses' | 'vip_upsell' | 'supremo';
   customerName: string;
   customerEmail: string;
   createdAt: string;
@@ -23,6 +23,38 @@ interface StoredToken {
 }
 
 const tokenDatabase: Record<string, StoredToken> = {
+  'PARADISE-SUPREMO-9999': {
+    token: 'PARADISE-SUPREMO-9999',
+    tier: 'supremo',
+    customerName: 'Membro SUPREMO Master',
+    customerEmail: 'supremo@paradisepags.com',
+    createdAt: new Date().toISOString(),
+    source: 'preset'
+  },
+  'TOKEN-BONUS1-BPM100': {
+    token: 'TOKEN-BONUS1-BPM100',
+    tier: 'bonus_1',
+    customerName: 'Aluno Bônus 1 (100 BPM)',
+    customerEmail: 'bonus1@paradisepags.com',
+    createdAt: new Date().toISOString(),
+    source: 'preset'
+  },
+  'TOKEN-BONUS2-GATILHO': {
+    token: 'TOKEN-BONUS2-GATILHO',
+    tier: 'bonus_2',
+    customerName: 'Aluno Bônus 2 (Raio-X)',
+    customerEmail: 'bonus2@paradisepags.com',
+    createdAt: new Date().toISOString(),
+    source: 'preset'
+  },
+  'TOKEN-BONUS3-VINCULO': {
+    token: 'TOKEN-BONUS3-VINCULO',
+    tier: 'bonus_3',
+    customerName: 'Aluno Bônus 3 (Blindagem)',
+    customerEmail: 'bonus3@paradisepags.com',
+    createdAt: new Date().toISOString(),
+    source: 'preset'
+  },
   'PARADISE-VIP-8888': {
     token: 'PARADISE-VIP-8888',
     tier: 'vip_upsell',
@@ -83,6 +115,58 @@ app.get('/api/validate-token', (req: Request, res: Response) => {
   }
 
   // Fallback heuristic for Paradise generated tokens
+  if (token.includes('SUPREMO') || token.includes('MASTER')) {
+    return res.json({
+      valid: true,
+      session: {
+        token,
+        tier: 'supremo',
+        customerName: 'Membro SUPREMO Master',
+        customerEmail: 'supremo@paradisepags.com',
+        authenticatedAt: new Date().toISOString()
+      }
+    });
+  }
+
+  if (token.includes('BONUS1') || token.includes('BONUS-1') || token.includes('BPM100')) {
+    return res.json({
+      valid: true,
+      session: {
+        token,
+        tier: 'bonus_1',
+        customerName: 'Cliente Bônus 1',
+        customerEmail: 'bonus1@paradisepags.com',
+        authenticatedAt: new Date().toISOString()
+      }
+    });
+  }
+
+  if (token.includes('BONUS2') || token.includes('BONUS-2') || token.includes('GATILHO') || token.includes('RAIOX')) {
+    return res.json({
+      valid: true,
+      session: {
+        token,
+        tier: 'bonus_2',
+        customerName: 'Cliente Bônus 2',
+        customerEmail: 'bonus2@paradisepags.com',
+        authenticatedAt: new Date().toISOString()
+      }
+    });
+  }
+
+  if (token.includes('BONUS3') || token.includes('BONUS-3') || token.includes('VINCULO') || token.includes('BLINDAGEM')) {
+    return res.json({
+      valid: true,
+      session: {
+        token,
+        tier: 'bonus_3',
+        customerName: 'Cliente Bônus 3',
+        customerEmail: 'bonus3@paradisepags.com',
+        authenticatedAt: new Date().toISOString()
+      }
+    });
+  }
+
   if (
     token.includes('PARADISE-VIP') ||
     token.startsWith('PARADISE-VIP') ||

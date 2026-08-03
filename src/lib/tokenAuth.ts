@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { UserSession, AccessTier, TokenInfo } from '../types';
+import { UserSession, AccessTier, TokenInfo, UnlockedPermissions } from '../types';
 
 export const PARADISE_CHECKOUT_URL = 'https://mente.centraldealivio.com.br';
 
@@ -11,35 +11,110 @@ const SESSION_KEY = 'ade_members_session_v1';
 const COMPLETED_TOPICS_KEY = 'ade_completed_topics_v1';
 const REFLECTION_NOTES_KEY = 'ade_reflection_notes_v1';
 
+export function computePermissions(tokenRaw: string, tierRaw?: AccessTier): UnlockedPermissions {
+  const token = (tokenRaw || '').trim().toUpperCase();
+  const tier = tierRaw || 'standard';
+
+  // SUPREMO or VIP (Everything Unlocked)
+  if (
+    tier === 'supremo' ||
+    tier === 'vip_upsell' ||
+    tier === 'all_bonuses' ||
+    token.includes('SUPREMO') ||
+    token.includes('MASTER') ||
+    token.includes('VIP') ||
+    token.includes('UPSELL')
+  ) {
+    return {
+      mainBook: true,
+      bonus1: true,
+      bonus2: true,
+      bonus3: true,
+      vipCommunity: true,
+      isSupremo: true
+    };
+  }
+
+  // Specific Bonus Tokens
+  const isBonus1 = tier === 'bonus_1' || token.includes('BONUS1') || token.includes('BONUS-1') || token.includes('BPM100') || token.includes('BPM-100');
+  const isBonus2 = tier === 'bonus_2' || token.includes('BONUS2') || token.includes('BONUS-2') || token.includes('GATILHO') || token.includes('RAIOX');
+  const isBonus3 = tier === 'bonus_3' || token.includes('BONUS3') || token.includes('BONUS-3') || token.includes('VINCULO') || token.includes('BLINDAGEM');
+
+  return {
+    mainBook: true,
+    bonus1: isBonus1,
+    bonus2: isBonus2,
+    bonus3: isBonus3,
+    vipCommunity: false,
+    isSupremo: false
+  };
+}
+
 // Preset demo tokens for instant manual testing or showcase
 export const DEMO_TOKENS: Record<string, TokenInfo> = {
+  'PARADISE-SUPREMO-9999': {
+    token: 'PARADISE-SUPREMO-9999',
+    tier: 'supremo',
+    customerName: 'Membro SUPREMO Master',
+    customerEmail: 'supremo@exemplo.com',
+    createdAt: new Date().toISOString(),
+    permissions: computePermissions('PARADISE-SUPREMO-9999', 'supremo')
+  },
+  'TOKEN-BONUS1-BPM100': {
+    token: 'TOKEN-BONUS1-BPM100',
+    tier: 'bonus_1',
+    customerName: 'Aluno Bônus 1 (100 BPM)',
+    customerEmail: 'bonus1@exemplo.com',
+    createdAt: new Date().toISOString(),
+    permissions: computePermissions('TOKEN-BONUS1-BPM100', 'bonus_1')
+  },
+  'TOKEN-BONUS2-GATILHO': {
+    token: 'TOKEN-BONUS2-GATILHO',
+    tier: 'bonus_2',
+    customerName: 'Aluno Bônus 2 (Raio-X)',
+    customerEmail: 'bonus2@exemplo.com',
+    createdAt: new Date().toISOString(),
+    permissions: computePermissions('TOKEN-BONUS2-GATILHO', 'bonus_2')
+  },
+  'TOKEN-BONUS3-VINCULO': {
+    token: 'TOKEN-BONUS3-VINCULO',
+    tier: 'bonus_3',
+    customerName: 'Aluno Bônus 3 (Blindagem)',
+    customerEmail: 'bonus3@exemplo.com',
+    createdAt: new Date().toISOString(),
+    permissions: computePermissions('TOKEN-BONUS3-VINCULO', 'bonus_3')
+  },
   'PARADISE-VIP-8888': {
     token: 'PARADISE-VIP-8888',
     tier: 'vip_upsell',
     customerName: 'Cliente VIP Paradise',
     customerEmail: 'comprador.vip@exemplo.com',
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    permissions: computePermissions('PARADISE-VIP-8888', 'vip_upsell')
   },
   'VIP-UPSELL-9999': {
     token: 'VIP-UPSELL-9999',
     tier: 'vip_upsell',
-    customerName: 'Comprador VIP (Área Fantasma Ativa)',
+    customerName: 'Comprador Combo Bônus VIP',
     customerEmail: 'vip@exemplo.com',
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    permissions: computePermissions('VIP-UPSELL-9999', 'vip_upsell')
   },
   'DEMO-ADE-1001': {
     token: 'DEMO-ADE-1001',
     tier: 'standard',
     customerName: 'Aluno Antes da Explosão',
     customerEmail: 'aluno@exemplo.com',
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    permissions: computePermissions('DEMO-ADE-1001', 'standard')
   },
   'PARADISE-STD-1234': {
     token: 'PARADISE-STD-1234',
     tier: 'standard',
     customerName: 'Cliente Padrão Paradise',
     customerEmail: 'comprador@exemplo.com',
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    permissions: computePermissions('PARADISE-STD-1234', 'standard')
   }
 };
 
@@ -54,7 +129,11 @@ export async function validateTokenOnlineOrLocal(rawToken: string): Promise<User
     if (response.ok) {
       const data = await response.json();
       if (data.valid && data.session) {
-        return data.session as UserSession;
+        const s = data.session as UserSession;
+        return {
+          ...s,
+          permissions: s.permissions || computePermissions(s.token, s.tier)
+        };
       }
     }
   } catch (err) {
@@ -64,16 +143,66 @@ export async function validateTokenOnlineOrLocal(rawToken: string): Promise<User
   // Local fallback check
   const demoMatch = DEMO_TOKENS[cleanToken];
   if (demoMatch) {
+    const permissions = demoMatch.permissions || computePermissions(demoMatch.token, demoMatch.tier);
     return {
       token: demoMatch.token,
       tier: demoMatch.tier,
       customerName: demoMatch.customerName || 'Cliente Paradise',
       customerEmail: demoMatch.customerEmail || 'cliente@paradise.com',
-      authenticatedAt: new Date().toISOString()
+      authenticatedAt: new Date().toISOString(),
+      permissions
     };
   }
 
-  // Pattern check: if token contains PARADISE-VIP, VIP-, or UPSELL, grant VIP access (unlocks both Área Fantasma & Comunidade VIP)
+  // Pattern check: SUPREMO
+  if (cleanToken.includes('SUPREMO') || cleanToken.includes('MASTER')) {
+    return {
+      token: cleanToken,
+      tier: 'supremo',
+      customerName: 'Cliente SUPREMO Master',
+      customerEmail: 'supremo@paradisepags.com',
+      authenticatedAt: new Date().toISOString(),
+      permissions: computePermissions(cleanToken, 'supremo')
+    };
+  }
+
+  // Pattern check: Bônus 1 specifically
+  if (cleanToken.includes('BONUS1') || cleanToken.includes('BONUS-1') || cleanToken.includes('BPM100')) {
+    return {
+      token: cleanToken,
+      tier: 'bonus_1',
+      customerName: 'Cliente Bônus 1 (100 BPM)',
+      customerEmail: 'bonus1@paradisepags.com',
+      authenticatedAt: new Date().toISOString(),
+      permissions: computePermissions(cleanToken, 'bonus_1')
+    };
+  }
+
+  // Pattern check: Bônus 2 specifically
+  if (cleanToken.includes('BONUS2') || cleanToken.includes('BONUS-2') || cleanToken.includes('GATILHO') || cleanToken.includes('RAIOX')) {
+    return {
+      token: cleanToken,
+      tier: 'bonus_2',
+      customerName: 'Cliente Bônus 2 (Raio-X)',
+      customerEmail: 'bonus2@paradisepags.com',
+      authenticatedAt: new Date().toISOString(),
+      permissions: computePermissions(cleanToken, 'bonus_2')
+    };
+  }
+
+  // Pattern check: Bônus 3 specifically
+  if (cleanToken.includes('BONUS3') || cleanToken.includes('BONUS-3') || cleanToken.includes('VINCULO') || cleanToken.includes('BLINDAGEM')) {
+    return {
+      token: cleanToken,
+      tier: 'bonus_3',
+      customerName: 'Cliente Bônus 3 (Blindagem)',
+      customerEmail: 'bonus3@paradisepags.com',
+      authenticatedAt: new Date().toISOString(),
+      permissions: computePermissions(cleanToken, 'bonus_3')
+    };
+  }
+
+  // Pattern check: VIP / UPSELL (All Bonuses + VIP Community)
   if (
     cleanToken.includes('PARADISE-VIP') ||
     cleanToken.startsWith('PARADISE-VIP') ||
@@ -86,7 +215,8 @@ export async function validateTokenOnlineOrLocal(rawToken: string): Promise<User
       tier: 'vip_upsell',
       customerName: 'Cliente VIP Paradise',
       customerEmail: 'cliente.vip@paradisepags.com',
-      authenticatedAt: new Date().toISOString()
+      authenticatedAt: new Date().toISOString(),
+      permissions: computePermissions(cleanToken, 'vip_upsell')
     };
   }
 
@@ -97,11 +227,56 @@ export async function validateTokenOnlineOrLocal(rawToken: string): Promise<User
       tier: 'standard',
       customerName: 'Membro Autorizado',
       customerEmail: 'membro@paradise.com',
-      authenticatedAt: new Date().toISOString()
+      authenticatedAt: new Date().toISOString(),
+      permissions: computePermissions(cleanToken, 'standard')
     };
   }
 
   return null;
+}
+
+export function redeemAdditionalToken(
+  currentSession: UserSession,
+  newTokenRaw: string
+): { updatedSession: UserSession; newlyUnlockedMsg: string } | null {
+  const newPermissions = computePermissions(newTokenRaw);
+  const currentPerms = currentSession.permissions || computePermissions(currentSession.token, currentSession.tier);
+
+  // Merge permissions
+  const mergedPerms: UnlockedPermissions = {
+    mainBook: true,
+    bonus1: currentPerms.bonus1 || newPermissions.bonus1,
+    bonus2: currentPerms.bonus2 || newPermissions.bonus2,
+    bonus3: currentPerms.bonus3 || newPermissions.bonus3,
+    vipCommunity: currentPerms.vipCommunity || newPermissions.vipCommunity,
+    isSupremo: currentPerms.isSupremo || newPermissions.isSupremo
+  };
+
+  let newTier: AccessTier = currentSession.tier;
+  let newlyUnlockedMsg = 'Bônus liberado com sucesso!';
+
+  if (mergedPerms.isSupremo) {
+    newTier = 'supremo';
+    newlyUnlockedMsg = '👑 TOKEN SUPREMO ATIVADO! Todos os Bônus e a Comunidade VIP foram 100% liberados!';
+  } else if (mergedPerms.bonus1 && mergedPerms.bonus2 && mergedPerms.bonus3 && mergedPerms.vipCommunity) {
+    newTier = 'vip_upsell';
+    newlyUnlockedMsg = '💎 Todos os Bônus VIP e a Comunidade foram ativados!';
+  } else if (newPermissions.bonus1) {
+    newlyUnlockedMsg = '⚡ Bônus 1 (Protocolo 100 BPM) liberado!';
+  } else if (newPermissions.bonus2) {
+    newlyUnlockedMsg = '🎯 Bônus 2 (Raio-X do Gatilho) liberado!';
+  } else if (newPermissions.bonus3) {
+    newlyUnlockedMsg = '🛡️ Bônus 3 (Blindagem do Vínculo) liberado!';
+  }
+
+  const updatedSession: UserSession = {
+    ...currentSession,
+    tier: newTier,
+    permissions: mergedPerms
+  };
+
+  saveSession(updatedSession);
+  return { updatedSession, newlyUnlockedMsg };
 }
 
 export function getStoredSession(): UserSession | null {

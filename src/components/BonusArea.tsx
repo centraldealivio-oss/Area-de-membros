@@ -5,10 +5,135 @@
 
 import React, { useState, useEffect } from 'react';
 import { UPSELL_BONUSES } from '../data/bonusData';
-import { Heart, Activity, Shield, Sparkles, Play, Pause, CheckCircle2, RotateCcw, Copy, FileText, Send, ArrowRight, Clock, Volume2, Sparkle, ShieldCheck, Zap } from 'lucide-react';
+import { UserSession } from '../types';
+import { getStoredSession, redeemAdditionalToken, computePermissions } from '../lib/tokenAuth';
+import { Heart, Activity, Shield, Sparkles, Play, Pause, CheckCircle2, RotateCcw, Copy, FileText, Send, ArrowRight, Clock, Volume2, Sparkle, ShieldCheck, Zap, Lock, KeyRound, ShieldAlert } from 'lucide-react';
 
-export const BonusArea: React.FC = () => {
+interface BonusAreaProps {
+  session?: UserSession | null;
+  onUpdateSession?: (session: UserSession) => void;
+}
+
+export const BonusArea: React.FC<BonusAreaProps> = ({ session: propSession, onUpdateSession }) => {
+  const [currentSession, setCurrentSession] = useState<UserSession | null>(
+    propSession || getStoredSession()
+  );
   const [activeBonusTab, setActiveBonusTab] = useState<'b1' | 'b2' | 'b3'>('b1');
+
+  // Token redemption states inside Bonus Area
+  const [bonusTokenInput, setBonusTokenInput] = useState('');
+  const [tokenErrorMsg, setTokenErrorMsg] = useState<string | null>(null);
+  const [tokenSuccessMsg, setTokenSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (propSession) {
+      setCurrentSession(propSession);
+    }
+  }, [propSession]);
+
+  const perms = currentSession?.permissions || computePermissions(currentSession?.token || '', currentSession?.tier);
+
+  const hasB1 = Boolean(perms.bonus1 || perms.isSupremo);
+  const hasB2 = Boolean(perms.bonus2 || perms.isSupremo);
+  const hasB3 = Boolean(perms.bonus3 || perms.isSupremo);
+
+  const handleActivateBonusToken = (customToken?: string) => {
+    const raw = (customToken || bonusTokenInput).trim();
+    if (!raw) {
+      setTokenErrorMsg('Digite o token do bônus ou o Token Supremo.');
+      return;
+    }
+    setTokenErrorMsg(null);
+    setTokenSuccessMsg(null);
+
+    const baseSession = currentSession || {
+      token: 'SESSION-USER',
+      tier: 'standard',
+      customerName: 'Membro Paradise',
+      customerEmail: 'membro@paradise.com',
+      authenticatedAt: new Date().toISOString(),
+      permissions: perms
+    };
+
+    const res = redeemAdditionalToken(baseSession, raw);
+    if (res) {
+      setCurrentSession(res.updatedSession);
+      if (onUpdateSession) onUpdateSession(res.updatedSession);
+      setTokenSuccessMsg(res.newlyUnlockedMsg);
+      setBonusTokenInput('');
+    } else {
+      setTokenErrorMsg('Token não reconhecido. Verifique o código e tente novamente.');
+    }
+  };
+
+  const renderLockedBonusView = (bonusNum: number, bonusTitle: string, defaultToken: string) => (
+    <div className="bg-[#100e15] border border-amber-500/30 rounded-3xl p-6 sm:p-10 text-center space-y-6 animate-fadeIn max-w-3xl mx-auto shadow-2xl">
+      <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400 shadow-lg">
+        <Lock className="w-8 h-8" />
+      </div>
+
+      <div>
+        <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
+          Bônus {bonusNum} Restrito
+        </span>
+        <h3 className="font-serif text-2xl font-bold text-white mb-2">
+          {bonusTitle}
+        </h3>
+        <p className="text-xs text-gray-300 max-w-xl mx-auto leading-relaxed">
+          Você ainda não possui este bônus ativado no seu plano atual. Digite seu token do Bônus {bonusNum} ou o <strong className="text-amber-300">Token Supremo (Libera TUDO)</strong> para desbloquear imediatamente.
+        </p>
+      </div>
+
+      <div className="bg-[#0b0a0e] border border-white/10 p-6 rounded-2xl max-w-md mx-auto space-y-3">
+        <div className="flex items-center space-x-2 text-xs font-bold text-gray-200">
+          <KeyRound className="w-4 h-4 text-amber-400" />
+          <span>Ativar Bônus {bonusNum} com seu Token</span>
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={bonusTokenInput}
+            onChange={(e) => setBonusTokenInput(e.target.value)}
+            placeholder={`Digite o token (Ex: ${defaultToken})`}
+            className="flex-1 px-4 py-3 bg-[#13111a] border border-white/10 rounded-xl text-xs text-white placeholder-gray-600 font-mono focus:outline-none focus:border-amber-400"
+          />
+          <button
+            onClick={() => handleActivateBonusToken()}
+            className="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold text-xs hover:from-amber-300 transition-all shrink-0 shadow-md"
+          >
+            Ativar
+          </button>
+        </div>
+
+        {tokenErrorMsg && (
+          <p className="text-xs text-rose-400 font-medium">{tokenErrorMsg}</p>
+        )}
+
+        <div className="pt-2 border-t border-white/5 space-y-1.5 text-left">
+          <span className="text-[10px] font-mono text-gray-400 block font-semibold">
+            ⚡ Ou teste rapidamente com os tokens abaixo:
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => handleActivateBonusToken(defaultToken)}
+              className="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-mono text-[10px] border border-amber-500/30 transition-all"
+            >
+              Ativar {defaultToken}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleActivateBonusToken('PARADISE-SUPREMO-9999')}
+              className="px-2.5 py-1 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 font-mono text-[10px] border border-orange-500/30 transition-all font-bold"
+            >
+              👑 Ativar TOKEN SUPREMO (Libera TUDO)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   // --- BONUS 1 STATE (Breathing Protocol & SOS Audio) ---
   const [isBreathingActive, setIsBreathingActive] = useState(false);
@@ -418,7 +543,7 @@ Assinado com carinho para proteger nosso relacionamento.`;
       <div id="interactive-bonus-workspace" className="scroll-mt-28 space-y-6">
         
         {/* Navigation Selector Bar */}
-        <div className="flex items-center justify-between bg-[#121118] p-2 rounded-2xl border border-white/10 overflow-x-auto">
+        <div className="flex items-center justify-between bg-[#121118] p-2 rounded-2xl border border-white/10 overflow-x-auto gap-2">
           <button
             onClick={() => setActiveBonusTab('b1')}
             className={`px-5 py-3 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shrink-0 ${
@@ -429,6 +554,11 @@ Assinado com carinho para proteger nosso relacionamento.`;
           >
             <Activity className="w-4 h-4" />
             <span>Ferramenta 1: Protocolo 100 BPM</span>
+            {hasB1 ? (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 ml-1">✓ Liberado</span>
+            ) : (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800 ml-1">🔒 Bloqueado</span>
+            )}
           </button>
 
           <button
@@ -441,6 +571,11 @@ Assinado com carinho para proteger nosso relacionamento.`;
           >
             <Heart className="w-4 h-4" />
             <span>Ferramenta 2: Raio-X do Gatilho</span>
+            {hasB2 ? (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 ml-1">✓ Liberado</span>
+            ) : (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800 ml-1">🔒 Bloqueado</span>
+            )}
           </button>
 
           <button
@@ -453,301 +588,329 @@ Assinado com carinho para proteger nosso relacionamento.`;
           >
             <Shield className="w-4 h-4" />
             <span>Ferramenta 3: Blindagem do Vínculo</span>
+            {hasB3 ? (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 ml-1">✓ Liberado</span>
+            ) : (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800 ml-1">🔒 Bloqueado</span>
+            )}
           </button>
         </div>
 
+        {/* Global Success Notification banner if redeemed */}
+        {tokenSuccessMsg && (
+          <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center justify-between animate-fadeIn">
+            <span className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              {tokenSuccessMsg}
+            </span>
+            <button onClick={() => setTokenSuccessMsg(null)} className="text-gray-400 hover:text-white text-xs">✕</button>
+          </div>
+        )}
+
         {/* --- BONUS 1 TOOL WORKSPACE --- */}
         {activeBonusTab === 'b1' && (
-          <div className="bg-[#100e15] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
-            
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
-              <div>
-                <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
-                  Bônus 1 • Treinador Bio-Feedback & Áudio SOS
-                </span>
-                <h3 className="font-serif text-2xl font-bold text-white">
-                  Protocolo 100 BPM: Desativação Fisiológica do Taquicardia
-                </h3>
-                <p className="text-xs text-gray-400 mt-1">
-                  Use durante discussões calorosas ou crises de ansiedade para acalmar a mente e reativar a lógica.
-                </p>
-              </div>
-
-              <div className="bg-[#181422] px-5 py-2.5 rounded-2xl border border-rose-500/30 text-center shrink-0">
-                <span className="text-[10px] uppercase font-mono text-gray-400 block">Frequência Cardíaca Atual</span>
-                <span className={`font-mono text-xl font-bold ${simulatedBpm > 100 ? 'text-rose-400 animate-pulse' : 'text-emerald-400'}`}>
-                  {simulatedBpm} BPM {simulatedBpm > 100 ? '⚠️ (ESTADO DE ALARME)' : '✓ (CALMA ALCANÇADA)'}
-                </span>
-              </div>
-            </div>
-
-            {/* Audio SOS Emergencial Card */}
-            <div className="bg-[#181420] border border-rose-500/30 rounded-2xl p-5 space-y-4 shadow-xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
-                    <Volume2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-white">Áudio SOS Emergencial (3 Minutos)</h4>
-                    <p className="text-xs text-gray-400">Escute com fones no meio do conflito para acalmar os batimentos imediatamente</p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={toggleSosAudio}
-                  className="px-5 py-2.5 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-500 transition-all shadow-lg shadow-rose-600/30 flex items-center space-x-2 shrink-0"
-                >
-                  {isSosAudioPlaying ? (
-                    <>
-                      <Pause className="w-4 h-4 fill-white" />
-                      <span>Pausar Áudio SOS</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 fill-white ml-0.5" />
-                      <span>Ouvir Áudio SOS</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* SOS Audio Progress */}
-              {isSosAudioPlaying && (
-                <div className="space-y-1 pt-2 animate-fadeIn">
-                  <div className="flex justify-between text-[10px] font-mono text-rose-300">
-                    <span>Narração Calma em Execução...</span>
-                    <span>{sosProgress}%</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-rose-500 transition-all duration-300" style={{ width: `${sosProgress}%` }} />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Interactive Breathing Visualizer Circle */}
-            <div className="flex flex-col items-center justify-center py-6">
-              <div className="relative flex items-center justify-center">
-                {/* Outer Glow Ring */}
-                <div
-                  className={`w-64 h-64 sm:w-72 sm:h-72 rounded-full border-4 flex flex-col items-center justify-center transition-all duration-1000 ${
-                    breathPhase === 'inspire'
-                      ? 'scale-110 border-amber-400 shadow-[0_0_60px_rgba(251,191,36,0.3)] bg-amber-500/10'
-                      : breathPhase === 'hold'
-                      ? 'scale-105 border-indigo-400 shadow-[0_0_40px_rgba(99,102,241,0.3)] bg-indigo-500/10'
-                      : 'scale-90 border-emerald-400 shadow-[0_0_50px_rgba(16,185,129,0.3)] bg-emerald-500/10'
-                  }`}
-                >
-                  <span className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-1">
-                    {isBreathingActive ? 'Fase do Exercício:' : 'Visualizador Prontos'}
+          hasB1 ? (
+            <div className="bg-[#100e15] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
+              
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+                <div>
+                  <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
+                    Bônus 1 • Treinador Bio-Feedback & Áudio SOS
                   </span>
+                  <h3 className="font-serif text-2xl font-bold text-white">
+                    Protocolo 100 BPM: Desativação Fisiológica do Taquicardia
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Use durante discussões calorosas ou crises de ansiedade para acalmar a mente e reativar a lógica.
+                  </p>
+                </div>
 
-                  <h4 className="font-serif text-xl sm:text-2xl font-bold uppercase text-amber-300 tracking-wide text-center px-4">
-                    {isBreathingActive
-                      ? breathPhase === 'inspire'
-                        ? 'INSPIRE LENTAMENTE'
+                <div className="bg-[#181422] px-5 py-2.5 rounded-2xl border border-rose-500/30 text-center shrink-0">
+                  <span className="text-[10px] uppercase font-mono text-gray-400 block">Frequência Cardíaca Atual</span>
+                  <span className={`font-mono text-xl font-bold ${simulatedBpm > 100 ? 'text-rose-400 animate-pulse' : 'text-emerald-400'}`}>
+                    {simulatedBpm} BPM {simulatedBpm > 100 ? '⚠️ (ESTADO DE ALARME)' : '✓ (CALMA ALCANÇADA)'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Audio SOS Emergencial Card */}
+              <div className="bg-[#181420] border border-rose-500/30 rounded-2xl p-5 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
+                      <Volume2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-white">Áudio SOS Emergencial (3 Minutos)</h4>
+                      <p className="text-xs text-gray-400">Escute com fones no meio do conflito para acalmar os batimentos imediatamente</p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={toggleSosAudio}
+                    className="px-5 py-2.5 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-500 transition-all shadow-lg shadow-rose-600/30 flex items-center space-x-2 shrink-0"
+                  >
+                    {isSosAudioPlaying ? (
+                      <>
+                        <Pause className="w-4 h-4 fill-white" />
+                        <span>Pausar Áudio SOS</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 fill-white ml-0.5" />
+                        <span>Ouvir Áudio SOS</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* SOS Audio Progress */}
+                {isSosAudioPlaying && (
+                  <div className="space-y-1 pt-2 animate-fadeIn">
+                    <div className="flex justify-between text-[10px] font-mono text-rose-300">
+                      <span>Narração Calma em Execução...</span>
+                      <span>{sosProgress}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-rose-500 transition-all duration-300" style={{ width: `${sosProgress}%` }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Interactive Breathing Visualizer Circle */}
+              <div className="flex flex-col items-center justify-center py-6">
+                <div className="relative flex items-center justify-center">
+                  {/* Outer Glow Ring */}
+                  <div
+                    className={`w-64 h-64 sm:w-72 sm:h-72 rounded-full border-4 flex flex-col items-center justify-center transition-all duration-1000 ${
+                      breathPhase === 'inspire'
+                        ? 'scale-110 border-amber-400 shadow-[0_0_60px_rgba(251,191,36,0.3)] bg-amber-500/10'
                         : breathPhase === 'hold'
-                        ? 'SEGURE O AR'
-                        : 'ESPIRE SOLTANDO A TENSÃO'
-                      : 'CLIQUE EM INICIAR'}
-                  </h4>
+                        ? 'scale-105 border-indigo-400 shadow-[0_0_40px_rgba(99,102,241,0.3)] bg-indigo-500/10'
+                        : 'scale-90 border-emerald-400 shadow-[0_0_50px_rgba(16,185,129,0.3)] bg-emerald-500/10'
+                    }`}
+                  >
+                    <span className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-1">
+                      {isBreathingActive ? 'Fase do Exercício:' : 'Visualizador Prontos'}
+                    </span>
 
-                  <span className="font-mono text-4xl font-extrabold text-white my-2">
-                    {isBreathingActive ? `${breathTimer}s` : '4-7-8'}
-                  </span>
+                    <h4 className="font-serif text-xl sm:text-2xl font-bold uppercase text-amber-300 tracking-wide text-center px-4">
+                      {isBreathingActive
+                        ? breathPhase === 'inspire'
+                          ? 'INSPIRE LENTAMENTE'
+                          : breathPhase === 'hold'
+                          ? 'SEGURE O AR'
+                          : 'ESPIRE SOLTANDO A TENSÃO'
+                        : 'CLIQUE EM INICIAR'}
+                    </h4>
 
-                  <span className="text-[11px] text-gray-400 font-mono">
-                    Ciclos Concluídos: {breathCycleCount}
-                  </span>
+                    <span className="font-mono text-4xl font-extrabold text-white my-2">
+                      {isBreathingActive ? `${breathTimer}s` : '4-7-8'}
+                    </span>
+
+                    <span className="text-[11px] text-gray-400 font-mono">
+                      Ciclos Concluídos: {breathCycleCount}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Start / Pause Control */}
+                <div className="mt-8 flex items-center space-x-4">
+                  <button
+                    onClick={() => setIsBreathingActive(!isBreathingActive)}
+                    className="px-8 py-3.5 rounded-2xl font-bold text-sm bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 hover:from-amber-300 transition-all shadow-lg shadow-amber-500/20 flex items-center space-x-2"
+                  >
+                    {isBreathingActive ? (
+                      <>
+                        <Pause className="w-4 h-4 fill-slate-950" />
+                        <span>Pausar Exercício</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 fill-slate-950 ml-0.5" />
+                        <span>Iniciar Ritmo Guiado 4-7-8</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsBreathingActive(false);
+                      setSimulatedBpm(122);
+                      setBreathCycleCount(0);
+                    }}
+                    className="p-3.5 rounded-2xl bg-white/5 text-gray-400 hover:text-white border border-white/10"
+                    title="Reiniciar Simulação"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
-              {/* Start / Pause Control */}
-              <div className="mt-8 flex items-center space-x-4">
-                <button
-                  onClick={() => setIsBreathingActive(!isBreathingActive)}
-                  className="px-8 py-3.5 rounded-2xl font-bold text-sm bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 hover:from-amber-300 transition-all shadow-lg shadow-amber-500/20 flex items-center space-x-2"
-                >
-                  {isBreathingActive ? (
-                    <>
-                      <Pause className="w-4 h-4 fill-slate-950" />
-                      <span>Pausar Exercício</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 fill-slate-950 ml-0.5" />
-                      <span>Iniciar Ritmo Guiado 4-7-8</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setIsBreathingActive(false);
-                    setSimulatedBpm(122);
-                    setBreathCycleCount(0);
-                  }}
-                  className="p-3.5 rounded-2xl bg-white/5 text-gray-400 hover:text-white border border-white/10"
-                  title="Reiniciar Simulação"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-              </div>
             </div>
-
-          </div>
+          ) : (
+            renderLockedBonusView(1, 'Protocolo 100 BPM (Bio-Feedback & SOS Audio)', 'TOKEN-BONUS1-BPM100')
+          )
         )}
 
         {/* --- BONUS 2 TOOL WORKSPACE --- */}
         {activeBonusTab === 'b2' && (
-          <div className="bg-[#100e15] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
-            <div>
-              <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
-                Bônus 2 • Diagnosticador Neuro-Comportamental
-              </span>
-              <h3 className="font-serif text-2xl font-bold text-white">
-                Raio-X do Gatilho: Mapeamento de Inseguranças
-              </h3>
-              <p className="text-xs text-gray-400 mt-1">
-                Responda às 3 perguntas abaixo para descobrir como seu cérebro aciona o alerta de defesa e como desativá-lo.
-              </p>
-            </div>
+          hasB2 ? (
+            <div className="bg-[#100e15] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
+              <div>
+                <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
+                  Bônus 2 • Diagnosticador Neuro-Comportamental
+                </span>
+                <h3 className="font-serif text-2xl font-bold text-white">
+                  Raio-X do Gatilho: Mapeamento de Inseguranças
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">
+                  Responda às 3 perguntas abaixo para descobrir como seu cérebro aciona o alerta de defesa e como desativá-lo.
+                </p>
+              </div>
 
-            <div className="space-y-6">
-              {quizQuestions.map((q) => (
-                <div key={q.id} className="bg-[#16131d] p-6 rounded-2xl border border-white/10 space-y-4">
-                  <h4 className="font-serif font-bold text-sm sm:text-base text-amber-200">
-                    {q.q}
-                  </h4>
-                  <div className="grid grid-cols-1 gap-2.5">
-                    {q.options.map((opt, i) => {
-                      const isSelected = quizAnswers[q.id] === opt.type;
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => handleSelectQuizOption(q.id, opt.type)}
-                          className={`w-full p-4 rounded-xl text-left text-xs font-medium transition-all flex items-center justify-between ${
-                            isSelected
-                              ? 'bg-amber-500/20 text-amber-200 border-2 border-amber-400 shadow-md'
-                              : 'bg-[#0c0a10] text-gray-300 border border-white/5 hover:border-white/20'
-                          }`}
-                        >
-                          <span className="pr-3 leading-relaxed">{opt.label}</span>
-                          {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />}
-                        </button>
-                      );
-                    })}
+              <div className="space-y-6">
+                {quizQuestions.map((q) => (
+                  <div key={q.id} className="bg-[#16131d] p-6 rounded-2xl border border-white/10 space-y-4">
+                    <h4 className="font-serif font-bold text-sm sm:text-base text-amber-200">
+                      {q.q}
+                    </h4>
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {q.options.map((opt, i) => {
+                        const isSelected = quizAnswers[q.id] === opt.type;
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => handleSelectQuizOption(q.id, opt.type)}
+                            className={`w-full p-4 rounded-xl text-left text-xs font-medium transition-all flex items-center justify-between ${
+                              isSelected
+                                ? 'bg-amber-500/20 text-amber-200 border-2 border-amber-400 shadow-md'
+                                : 'bg-[#0c0a10] text-gray-300 border border-white/5 hover:border-white/20'
+                            }`}
+                          >
+                            <span className="pr-3 leading-relaxed">{opt.label}</span>
+                            {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              <button
-                onClick={handleFinishQuiz}
-                disabled={Object.keys(quizAnswers).length < 3}
-                className="w-full py-4 rounded-2xl font-bold text-sm bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 hover:from-amber-300 transition-all disabled:opacity-40 shadow-xl shadow-amber-500/20 flex items-center justify-center space-x-2"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Gerar Diagnóstico Personalizado</span>
-              </button>
+                <button
+                  onClick={handleFinishQuiz}
+                  disabled={Object.keys(quizAnswers).length < 3}
+                  className="w-full py-4 rounded-2xl font-bold text-sm bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 hover:from-amber-300 transition-all disabled:opacity-40 shadow-xl shadow-amber-500/20 flex items-center justify-center space-x-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Gerar Diagnóstico Personalizado</span>
+                </button>
 
-              {quizResult && (
-                <div className="bg-gradient-to-r from-amber-500/15 via-[#1a1520] to-rose-500/15 border border-amber-500/40 p-6 sm:p-8 rounded-3xl space-y-4 animate-fadeIn shadow-2xl">
-                  <div className="flex items-center space-x-2 text-amber-300">
-                    <Sparkles className="w-5 h-5 text-amber-400" />
-                    <h4 className="font-serif font-bold text-lg">Resultado do Seu Raio-X Emocional</h4>
+                {quizResult && (
+                  <div className="bg-gradient-to-r from-amber-500/15 via-[#1a1520] to-rose-500/15 border border-amber-500/40 p-6 sm:p-8 rounded-3xl space-y-4 animate-fadeIn shadow-2xl">
+                    <div className="flex items-center space-x-2 text-amber-300">
+                      <Sparkles className="w-5 h-5 text-amber-400" />
+                      <h4 className="font-serif font-bold text-lg">Resultado do Seu Raio-X Emocional</h4>
+                    </div>
+                    <p className="text-xs sm:text-sm text-amber-100 leading-relaxed font-sans bg-black/40 p-5 rounded-2xl border border-amber-500/20">
+                      {quizResult}
+                    </p>
                   </div>
-                  <p className="text-xs sm:text-sm text-amber-100 leading-relaxed font-sans bg-black/40 p-5 rounded-2xl border border-amber-500/20">
-                    {quizResult}
-                  </p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            renderLockedBonusView(2, 'Raio-X do Gatilho (Diagnosticador Neuro-Comportamental)', 'TOKEN-BONUS2-GATILHO')
+          )
         )}
 
         {/* --- BONUS 3 TOOL WORKSPACE --- */}
         {activeBonusTab === 'b3' && (
-          <div className="bg-[#100e15] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
-            <div>
-              <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
-                Bônus 3 • Gerador de Acordo Inquebrável
-              </span>
-              <h3 className="font-serif text-2xl font-bold text-white">
-                Blindagem do Vínculo: Termo de Limites Saudáveis
-              </h3>
-              <p className="text-xs text-gray-400 mt-1">
-                Crie um acordo claro e afetuoso para ser compartilhado no WhatsApp ou guardado com o casal.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Input Form */}
-              <div className="space-y-5 bg-[#16131d] p-6 rounded-2xl border border-white/10">
-                <div>
-                  <label className="text-xs font-bold text-gray-200 block mb-2">
-                    Nome do Seu Parceiro(a):
-                  </label>
-                  <input
-                    type="text"
-                    value={partnerName}
-                    onChange={(e) => setPartnerName(e.target.value)}
-                    placeholder="Ex: Rodrigo / Lucas / Marcelo"
-                    className="w-full px-4 py-3 bg-[#0a080f] border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div className="space-y-3 pt-2">
-                  <label className="flex items-center space-x-3 text-xs text-gray-300 cursor-pointer p-3 rounded-xl bg-[#0c0a10] border border-white/5 hover:border-amber-500/30">
-                    <input
-                      type="checkbox"
-                      checked={rulePausa}
-                      onChange={(e) => setRulePausa(e.target.checked)}
-                      className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500 w-4 h-4"
-                    />
-                    <span>Incluir Regra dos 20 Minutos de Pausa Sagrada</span>
-                  </label>
-
-                  <label className="flex items-center space-x-3 text-xs text-gray-300 cursor-pointer p-3 rounded-xl bg-[#0c0a10] border border-white/5 hover:border-amber-500/30">
-                    <input
-                      type="checkbox"
-                      checked={ruleSemGritos}
-                      onChange={(e) => setRuleSemGritos(e.target.checked)}
-                      className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500 w-4 h-4"
-                    />
-                    <span>Proibir Ameaças de Término no Calor do Momento</span>
-                  </label>
-                </div>
+          hasB3 ? (
+            <div className="bg-[#100e15] border border-amber-500/30 rounded-3xl p-6 sm:p-10 space-y-8 animate-fadeIn">
+              <div>
+                <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
+                  Bônus 3 • Gerador de Acordo Inquebrável
+                </span>
+                <h3 className="font-serif text-2xl font-bold text-white">
+                  Blindagem do Vínculo: Termo de Limites Saudáveis
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">
+                  Crie um acordo claro e afetuoso para ser compartilhado no WhatsApp ou guardado com o casal.
+                </p>
               </div>
 
-              {/* Document Preview */}
-              <div className="bg-[#0b0910] p-6 rounded-2xl border-2 border-amber-500/40 space-y-4 font-mono text-xs text-amber-200/90 relative shadow-2xl flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between pb-3 border-b border-amber-500/20 mb-3">
-                    <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Pré-visualização Oficial</span>
-                    <button
-                      onClick={handleCopyAgreement}
-                      className="px-3.5 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-[10px] hover:bg-amber-300 transition-all shadow-md flex items-center space-x-1"
-                    >
-                      <Copy className="w-3 h-3" />
-                      <span>{copiedAgreement ? 'Copiado!' : 'Copiar Texto'}</span>
-                    </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Input Form */}
+                <div className="space-y-5 bg-[#16131d] p-6 rounded-2xl border border-white/10">
+                  <div>
+                    <label className="text-xs font-bold text-gray-200 block mb-2">
+                      Nome do Seu Parceiro(a):
+                    </label>
+                    <input
+                      type="text"
+                      value={partnerName}
+                      onChange={(e) => setPartnerName(e.target.value)}
+                      placeholder="Ex: Rodrigo / Lucas / Marcelo"
+                      className="w-full px-4 py-3 bg-[#0a080f] border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400"
+                    />
                   </div>
 
-                  <pre className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-amber-100/90">
-                    {generatedAgreementText}
-                  </pre>
+                  <div className="space-y-3 pt-2">
+                    <label className="flex items-center space-x-3 text-xs text-gray-300 cursor-pointer p-3 rounded-xl bg-[#0c0a10] border border-white/5 hover:border-amber-500/30">
+                      <input
+                        type="checkbox"
+                        checked={rulePausa}
+                        onChange={(e) => setRulePausa(e.target.checked)}
+                        className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500 w-4 h-4"
+                      />
+                      <span>Incluir Regra dos 20 Minutos de Pausa Sagrada</span>
+                    </label>
+
+                    <label className="flex items-center space-x-3 text-xs text-gray-300 cursor-pointer p-3 rounded-xl bg-[#0c0a10] border border-white/5 hover:border-amber-500/30">
+                      <input
+                        type="checkbox"
+                        checked={ruleSemGritos}
+                        onChange={(e) => setRuleSemGritos(e.target.checked)}
+                        className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500 w-4 h-4"
+                      />
+                      <span>Proibir Ameaças de Término no Calor do Momento</span>
+                    </label>
+                  </div>
                 </div>
 
-                <div className="pt-4 border-t border-amber-500/20 text-[10px] text-gray-400 text-center italic">
-                  Copie e envie no WhatsApp para firmar o acordo.
+                {/* Document Preview */}
+                <div className="bg-[#0b0910] p-6 rounded-2xl border-2 border-amber-500/40 space-y-4 font-mono text-xs text-amber-200/90 relative shadow-2xl flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between pb-3 border-b border-amber-500/20 mb-3">
+                      <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Pré-visualização Oficial</span>
+                      <button
+                        onClick={handleCopyAgreement}
+                        className="px-3.5 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-[10px] hover:bg-amber-300 transition-all shadow-md flex items-center space-x-1"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>{copiedAgreement ? 'Copiado!' : 'Copiar Texto'}</span>
+                      </button>
+                    </div>
+
+                    <pre className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-amber-100/90">
+                      {generatedAgreementText}
+                    </pre>
+                  </div>
+
+                  <div className="pt-4 border-t border-amber-500/20 text-[10px] text-gray-400 text-center italic">
+                    Copie e envie no WhatsApp para firmar o acordo.
+                  </div>
                 </div>
+
               </div>
-
             </div>
-          </div>
+          ) : (
+            renderLockedBonusView(3, 'Blindagem do Vínculo (Gerador de Acordo Inquebrável)', 'TOKEN-BONUS3-VINCULO')
+          )
         )}
 
       </div>

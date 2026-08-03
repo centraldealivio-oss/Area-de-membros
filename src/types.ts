@@ -3,7 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type AccessTier = 'standard' | 'vip_upsell';
+export type AccessTier =
+  | 'standard'
+  | 'bonus_1'
+  | 'bonus_2'
+  | 'bonus_3'
+  | 'all_bonuses'
+  | 'vip_upsell'
+  | 'supremo';
+
+export interface UnlockedPermissions {
+  mainBook: boolean;
+  bonus1: boolean;
+  bonus2: boolean;
+  bonus3: boolean;
+  vipCommunity: boolean;
+  isSupremo: boolean;
+}
 
 export interface TokenInfo {
   token: string;
@@ -12,6 +28,7 @@ export interface TokenInfo {
   customerEmail?: string;
   createdAt: string;
   isUsed?: boolean;
+  permissions?: UnlockedPermissions;
 }
 
 export interface UserSession {
@@ -20,6 +37,7 @@ export interface UserSession {
   customerName: string;
   customerEmail: string;
   authenticatedAt: string;
+  permissions?: UnlockedPermissions;
 }
 
 export interface Topic {

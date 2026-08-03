@@ -18,10 +18,10 @@ export const GhostAreaUpsell: React.FC<GhostAreaUpsellProps> = ({ onUpgradeSucce
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleTestUpgradeToken = async () => {
-    const token = upgradeTokenInput.trim();
+  const handleTestUpgradeToken = async (customToken?: string) => {
+    const token = (customToken || upgradeTokenInput).trim();
     if (!token) {
-      setErrorMsg('Insira o token VIP que recebeu no checkout de upsell da Paradise.');
+      setErrorMsg('Insira o token recebido no checkout ou o Token Supremo.');
       return;
     }
 
@@ -30,10 +30,10 @@ export const GhostAreaUpsell: React.FC<GhostAreaUpsellProps> = ({ onUpgradeSucce
 
     try {
       const session = await validateTokenOnlineOrLocal(token);
-      if (session && session.tier === 'vip_upsell') {
+      if (session) {
         onUpgradeSuccess(session.token);
       } else {
-        setErrorMsg('Este token não possui o acesso VIP ativado. Digite um token VIP válido enviado no seu e-mail.');
+        setErrorMsg('Este token não foi reconhecido. Tente utilizar o Token Supremo ou VIP.');
       }
     } catch {
       setErrorMsg('Erro ao conectar ao servidor. Tente novamente.');
@@ -181,6 +181,36 @@ export const GhostAreaUpsell: React.FC<GhostAreaUpsellProps> = ({ onUpgradeSucce
         {errorMsg && (
           <p className="text-xs text-rose-400 font-medium">{errorMsg}</p>
         )}
+
+        <div className="pt-3 border-t border-white/5 space-y-2 text-left">
+          <span className="text-[10px] font-mono text-gray-400 block font-semibold uppercase tracking-wider">
+            ⚡ Testar com Tokens de Acesso:
+          </span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => handleTestUpgradeToken('PARADISE-SUPREMO-9999')}
+              className="px-2.5 py-1 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-[11px] font-bold transition-all flex items-center gap-1"
+            >
+              <Sparkles className="w-3 h-3 text-amber-400" />
+              <span>👑 Token Supremo (Libera TUDO)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTestUpgradeToken('PARADISE-VIP-8888')}
+              className="px-2.5 py-1 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 font-mono text-[11px] font-medium transition-all"
+            >
+              <span>💎 Token VIP Combo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTestUpgradeToken('TOKEN-BONUS1-BPM100')}
+              className="px-2.5 py-1 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 font-mono text-[11px] font-medium transition-all"
+            >
+              <span>⚡ Token Bônus 1</span>
+            </button>
+          </div>
+        </div>
       </div>
 
     </div>

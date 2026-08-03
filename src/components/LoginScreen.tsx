@@ -138,6 +138,60 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 )}
               </button>
             </form>
+
+            {/* Quick Demo Token Selector */}
+            <div className="mt-6 p-4 rounded-2xl bg-[#08090d] border border-white/5 space-y-2.5">
+              <span className="text-[11px] font-mono text-gray-400 block font-semibold uppercase tracking-wider">
+                ⚡ Testar Tokens Rápidos de Acesso:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleValidate('PARADISE-SUPREMO-9999')}
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-mono text-[11px] font-bold transition-all flex items-center gap-1 shadow-sm"
+                  title="Libera TUDO: Ebook + Bônus 1, 2 e 3 + Comunidade VIP"
+                >
+                  <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span>👑 Token Supremo</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleValidate('TOKEN-BONUS1-BPM100')}
+                  className="px-2.5 py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 font-mono text-[11px] font-medium transition-all"
+                  title="Libera Ebook + Apenas Bônus 1 (Protocolo 100 BPM)"
+                >
+                  <span>⚡ Bônus 1 (100 BPM)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleValidate('TOKEN-BONUS2-GATILHO')}
+                  className="px-2.5 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-mono text-[11px] font-medium transition-all"
+                  title="Libera Ebook + Apenas Bônus 2 (Raio-X do Gatilho)"
+                >
+                  <span>🎯 Bônus 2 (Raio-X)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleValidate('TOKEN-BONUS3-VINCULO')}
+                  className="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-mono text-[11px] font-medium transition-all"
+                  title="Libera Ebook + Apenas Bônus 3 (Blindagem do Vínculo)"
+                >
+                  <span>🛡️ Bônus 3 (Blindagem)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleValidate('PARADISE-STD-1234')}
+                  className="px-2.5 py-1.5 rounded-xl bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700 text-gray-300 font-mono text-[11px] font-medium transition-all"
+                  title="Apenas Ebook / Audiobook Base"
+                >
+                  <span>📘 Plano Padrão</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Direct Website Link */}
