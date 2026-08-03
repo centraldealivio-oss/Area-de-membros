@@ -19,7 +19,6 @@ export function computePermissions(tokenRaw: string, tierRaw?: AccessTier): Unlo
   if (
     tier === 'supremo' ||
     tier === 'vip_upsell' ||
-    tier === 'all_bonuses' ||
     token.includes('SUPREMO') ||
     token.includes('MASTER') ||
     token.includes('VIP') ||
@@ -35,10 +34,47 @@ export function computePermissions(tokenRaw: string, tierRaw?: AccessTier): Unlo
     };
   }
 
-  // Specific Bonus Tokens
-  const isBonus1 = tier === 'bonus_1' || token.includes('BONUS1') || token.includes('BONUS-1') || token.includes('BPM100') || token.includes('BPM-100');
-  const isBonus2 = tier === 'bonus_2' || token.includes('BONUS2') || token.includes('BONUS-2') || token.includes('GATILHO') || token.includes('RAIOX');
-  const isBonus3 = tier === 'bonus_3' || token.includes('BONUS3') || token.includes('BONUS-3') || token.includes('VINCULO') || token.includes('BLINDAGEM');
+  // All Bonuses tier
+  if (tier === 'all_bonuses' || token.includes('ALL-BONUSES') || token.includes('TODOS-BONUS')) {
+    return {
+      mainBook: true,
+      bonus1: true,
+      bonus2: true,
+      bonus3: true,
+      vipCommunity: false,
+      isSupremo: false
+    };
+  }
+
+  // Specific Bonus or Combo Tokens
+  const isBonus1 =
+    tier === 'bonus_1' ||
+    token.includes('BONUS1') ||
+    token.includes('BONUS-1') ||
+    token.includes('BPM100') ||
+    token.includes('-B1-') ||
+    token.includes('-B1') ||
+    token.startsWith('B1-');
+
+  const isBonus2 =
+    tier === 'bonus_2' ||
+    token.includes('BONUS2') ||
+    token.includes('BONUS-2') ||
+    token.includes('GATILHO') ||
+    token.includes('RAIOX') ||
+    token.includes('-B2-') ||
+    token.includes('-B2') ||
+    token.startsWith('B2-');
+
+  const isBonus3 =
+    tier === 'bonus_3' ||
+    token.includes('BONUS3') ||
+    token.includes('BONUS-3') ||
+    token.includes('VINCULO') ||
+    token.includes('BLINDAGEM') ||
+    token.includes('-B3-') ||
+    token.includes('-B3') ||
+    token.startsWith('B3-');
 
   return {
     mainBook: true,
@@ -63,7 +99,7 @@ export const DEMO_TOKENS: Record<string, TokenInfo> = {
   'TOKEN-BONUS1-BPM100': {
     token: 'TOKEN-BONUS1-BPM100',
     tier: 'bonus_1',
-    customerName: 'Aluno Bônus 1 (100 BPM)',
+    customerName: 'Comprador (Principal + Bônus 1)',
     customerEmail: 'bonus1@exemplo.com',
     createdAt: new Date().toISOString(),
     permissions: computePermissions('TOKEN-BONUS1-BPM100', 'bonus_1')
@@ -71,7 +107,7 @@ export const DEMO_TOKENS: Record<string, TokenInfo> = {
   'TOKEN-BONUS2-GATILHO': {
     token: 'TOKEN-BONUS2-GATILHO',
     tier: 'bonus_2',
-    customerName: 'Aluno Bônus 2 (Raio-X)',
+    customerName: 'Comprador (Principal + Bônus 2)',
     customerEmail: 'bonus2@exemplo.com',
     createdAt: new Date().toISOString(),
     permissions: computePermissions('TOKEN-BONUS2-GATILHO', 'bonus_2')
@@ -79,39 +115,31 @@ export const DEMO_TOKENS: Record<string, TokenInfo> = {
   'TOKEN-BONUS3-VINCULO': {
     token: 'TOKEN-BONUS3-VINCULO',
     tier: 'bonus_3',
-    customerName: 'Aluno Bônus 3 (Blindagem)',
+    customerName: 'Comprador (Principal + Bônus 3)',
     customerEmail: 'bonus3@exemplo.com',
     createdAt: new Date().toISOString(),
     permissions: computePermissions('TOKEN-BONUS3-VINCULO', 'bonus_3')
   },
-  'PARADISE-VIP-8888': {
-    token: 'PARADISE-VIP-8888',
-    tier: 'vip_upsell',
-    customerName: 'Cliente VIP Paradise',
-    customerEmail: 'comprador.vip@exemplo.com',
-    createdAt: new Date().toISOString(),
-    permissions: computePermissions('PARADISE-VIP-8888', 'vip_upsell')
-  },
-  'VIP-UPSELL-9999': {
-    token: 'VIP-UPSELL-9999',
-    tier: 'vip_upsell',
-    customerName: 'Comprador Combo Bônus VIP',
-    customerEmail: 'vip@exemplo.com',
-    createdAt: new Date().toISOString(),
-    permissions: computePermissions('VIP-UPSELL-9999', 'vip_upsell')
-  },
-  'DEMO-ADE-1001': {
-    token: 'DEMO-ADE-1001',
+  'TOKEN-BONUS12-COMBO': {
+    token: 'TOKEN-BONUS12-COMBO',
     tier: 'standard',
-    customerName: 'Aluno Antes da Explosão',
-    customerEmail: 'aluno@exemplo.com',
+    customerName: 'Comprador (Principal + Bônus 1 e 2)',
+    customerEmail: 'combo12@exemplo.com',
     createdAt: new Date().toISOString(),
-    permissions: computePermissions('DEMO-ADE-1001', 'standard')
+    permissions: computePermissions('TOKEN-BONUS12-B1-B2', 'standard')
+  },
+  'TOKEN-ALL-BONUSES': {
+    token: 'TOKEN-ALL-BONUSES',
+    tier: 'all_bonuses',
+    customerName: 'Comprador (Principal + Bônus 1, 2 e 3)',
+    customerEmail: 'allbonuses@exemplo.com',
+    createdAt: new Date().toISOString(),
+    permissions: computePermissions('TOKEN-ALL-BONUSES', 'all_bonuses')
   },
   'PARADISE-STD-1234': {
     token: 'PARADISE-STD-1234',
     tier: 'standard',
-    customerName: 'Cliente Padrão Paradise',
+    customerName: 'Comprador Somente Produto Principal',
     customerEmail: 'comprador@exemplo.com',
     createdAt: new Date().toISOString(),
     permissions: computePermissions('PARADISE-STD-1234', 'standard')
