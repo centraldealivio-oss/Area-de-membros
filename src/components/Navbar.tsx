@@ -12,7 +12,6 @@ interface NavbarProps {
   session: UserSession;
   completedCount: number;
   totalTopics: number;
-  onOpenSimulator: () => void;
   onOpenVercelGuide: () => void;
   onLogout: () => void;
   activeTab: 'curso' | 'bonuses' | 'community';
@@ -23,7 +22,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   session,
   completedCount,
   totalTopics,
-  onOpenSimulator,
   onOpenVercelGuide,
   onLogout,
   activeTab,

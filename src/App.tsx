@@ -24,7 +24,6 @@ import { TopicView } from './components/TopicView';
 import { GhostAreaUpsell } from './components/GhostAreaUpsell';
 import { BonusArea } from './components/BonusArea';
 import { VipCommunityArea } from './components/VipCommunityArea';
-import { ParadiseSimulatorModal } from './components/ParadiseSimulatorModal';
 import { VercelDeploymentGuideModal } from './components/VercelDeploymentGuideModal';
 import { MAIN_COVER_IMAGE, FALLBACK_COVER_IMAGE } from './data/bonusData';
 import { Sparkles, BookOpen, Flame, Lock, ArrowUpRight } from 'lucide-react';
@@ -42,7 +41,6 @@ export default function App() {
   const [completedTopics, setCompletedTopics] = useState<string[]>([]);
 
   // Modals
-  const [showSimulator, setShowSimulator] = useState(false);
   const [showVercelGuide, setShowVercelGuide] = useState(false);
 
   // Initial Auto-Login check (via URL token parameter or stored session)
@@ -140,7 +138,6 @@ export default function App() {
         session={session}
         completedCount={completedTopics.length}
         totalTopics={totalTopicsCount}
-        onOpenSimulator={() => setShowSimulator(true)}
         onOpenVercelGuide={() => setShowVercelGuide(true)}
         onLogout={handleLogout}
         activeTab={activeTab}
@@ -263,24 +260,16 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 2: ÁREA FANTASMA & BÔNUS VIP */}
+        {/* TAB 2: ÁREA BÔNUS VIP */}
         {activeTab === 'bonuses' && (
           <div>
-            {isVipUser ? (
-              <BonusArea />
-            ) : (
-              <GhostAreaUpsell
-                onUpgradeSuccess={(newVIPToken) => {
-                  const updatedSession: UserSession = {
-                    ...session,
-                    token: newVIPToken,
-                    tier: 'vip_upsell'
-                  };
-                  saveSession(updatedSession);
-                  setSession(updatedSession);
-                }}
-              />
-            )}
+            <BonusArea
+              session={session}
+              onUpdateSession={(updatedSession) => {
+                saveSession(updatedSession);
+                setSession(updatedSession);
+              }}
+            />
           </div>
         )}
 
@@ -298,20 +287,6 @@ export default function App() {
       </main>
 
       {/* MODALS */}
-      {showSimulator && (
-        <ParadiseSimulatorModal
-          onClose={() => setShowSimulator(false)}
-          onSimulateRedirect={async (generatedToken) => {
-            const validated = await validateTokenOnlineOrLocal(generatedToken);
-            if (validated) {
-              saveSession(validated);
-              setSession(validated);
-              setShowWelcomeModal(true);
-            }
-          }}
-        />
-      )}
-
       {showVercelGuide && (
         <VercelDeploymentGuideModal
           onClose={() => setShowVercelGuide(false)}

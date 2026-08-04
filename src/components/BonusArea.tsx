@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { UPSELL_BONUSES } from '../data/bonusData';
-import { UserSession } from '../types';
-import { getStoredSession, redeemAdditionalToken, computePermissions } from '../lib/tokenAuth';
+import { UserSession, UnlockedPermissions } from '../types';
+import { getStoredSession, redeemAdditionalToken, computePermissions, validateTokenOnlineOrLocal, saveSession } from '../lib/tokenAuth';
 import { Heart, Activity, Shield, Sparkles, Play, Pause, CheckCircle2, RotateCcw, Copy, FileText, Send, ArrowRight, Clock, Volume2, Sparkle, ShieldCheck, Zap, Lock, KeyRound, ShieldAlert } from 'lucide-react';
 
 interface BonusAreaProps {
@@ -24,6 +24,7 @@ export const BonusArea: React.FC<BonusAreaProps> = ({ session: propSession, onUp
   const [bonusTokenInput, setBonusTokenInput] = useState('');
   const [tokenErrorMsg, setTokenErrorMsg] = useState<string | null>(null);
   const [tokenSuccessMsg, setTokenSuccessMsg] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (propSession) {
@@ -37,32 +38,87 @@ export const BonusArea: React.FC<BonusAreaProps> = ({ session: propSession, onUp
   const hasB2 = Boolean(perms.bonus2 || perms.isSupremo);
   const hasB3 = Boolean(perms.bonus3 || perms.isSupremo);
 
-  const handleActivateBonusToken = (customToken?: string) => {
+  // Auto-select tab for unlocked bonus on mount or session change
+  useEffect(() => {
+    if (hasB1) {
+      setActiveBonusTab('b1');
+    } else if (hasB2) {
+      setActiveBonusTab('b2');
+    } else if (hasB3) {
+      setActiveBonusTab('b3');
+    }
+  }, [hasB1, hasB2, hasB3]);
+
+  const handleActivateBonusToken = async (customToken?: string) => {
     const raw = (customToken || bonusTokenInput).trim();
     if (!raw) {
-      setTokenErrorMsg('Digite o token do bônus ou o Token Supremo.');
+      setTokenErrorMsg('Digite seu token de acesso.');
       return;
     }
+    setIsLoading(true);
     setTokenErrorMsg(null);
     setTokenSuccessMsg(null);
 
-    const baseSession = currentSession || {
-      token: 'SESSION-USER',
-      tier: 'standard',
-      customerName: 'Membro Paradise',
-      customerEmail: 'membro@paradise.com',
-      authenticatedAt: new Date().toISOString(),
-      permissions: perms
-    };
+    try {
+      const validated = await validateTokenOnlineOrLocal(raw);
+      let updatedSession: UserSession;
 
-    const res = redeemAdditionalToken(baseSession, raw);
-    if (res) {
-      setCurrentSession(res.updatedSession);
-      if (onUpdateSession) onUpdateSession(res.updatedSession);
-      setTokenSuccessMsg(res.newlyUnlockedMsg);
+      if (validated) {
+        const currentPerms = currentSession?.permissions || computePermissions(currentSession?.token || '', currentSession?.tier);
+        const newPerms = validated.permissions || computePermissions(validated.token, validated.tier);
+
+        const mergedPerms: UnlockedPermissions = {
+          mainBook: true,
+          bonus1: currentPerms.bonus1 || newPerms.bonus1,
+          bonus2: currentPerms.bonus2 || newPerms.bonus2,
+          bonus3: currentPerms.bonus3 || newPerms.bonus3,
+          vipCommunity: currentPerms.vipCommunity || newPerms.vipCommunity,
+          isSupremo: currentPerms.isSupremo || newPerms.isSupremo
+        };
+
+        const isFullyVip = mergedPerms.bonus1 && mergedPerms.bonus2 && mergedPerms.bonus3;
+
+        updatedSession = {
+          ...(currentSession || validated),
+          token: validated.token || currentSession?.token || raw,
+          tier: isFullyVip ? 'vip_upsell' : (validated.tier !== 'standard' ? validated.tier : currentSession?.tier || 'standard'),
+          permissions: mergedPerms
+        };
+      } else {
+        const baseSession = currentSession || {
+          token: raw,
+          tier: 'standard',
+          customerName: 'Membro Paradise',
+          customerEmail: 'membro@paradise.com',
+          authenticatedAt: new Date().toISOString(),
+          permissions: perms
+        };
+
+        const res = redeemAdditionalToken(baseSession, raw);
+        if (!res) {
+          setTokenErrorMsg('Token não reconhecido. Verifique o código e tente novamente.');
+          setIsLoading(false);
+          return;
+        }
+        updatedSession = res.updatedSession;
+      }
+
+      setCurrentSession(updatedSession);
+      saveSession(updatedSession);
+      if (onUpdateSession) onUpdateSession(updatedSession);
+
+      setTokenSuccessMsg('Bônus ativado com sucesso! Conteúdo liberado.');
       setBonusTokenInput('');
-    } else {
-      setTokenErrorMsg('Token não reconhecido. Verifique o código e tente novamente.');
+
+      // Auto switch to unlocked tab
+      if (updatedSession.permissions.bonus1 && activeBonusTab === 'b1') setActiveBonusTab('b1');
+      else if (updatedSession.permissions.bonus2) setActiveBonusTab('b2');
+      else if (updatedSession.permissions.bonus3) setActiveBonusTab('b3');
+      else if (updatedSession.permissions.bonus1) setActiveBonusTab('b1');
+    } catch {
+      setTokenErrorMsg('Erro ao validar token. Tente novamente.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -79,8 +135,8 @@ export const BonusArea: React.FC<BonusAreaProps> = ({ session: propSession, onUp
         <h3 className="font-serif text-2xl font-bold text-white mb-2">
           {bonusTitle}
         </h3>
-        <p className="text-xs text-gray-300 max-w-xl mx-auto leading-relaxed">
-          Você ainda não possui este bônus ativado no seu plano atual. Digite seu token do Bônus {bonusNum} ou o <strong className="text-amber-300">Token Supremo (Libera TUDO)</strong> para desbloquear imediatamente.
+        <p className="text-xs text-gray-300 max-w-xl mx-auto leading-relaxed font-medium">
+          Já adquiriu sua oferta especial do Módulo Black? Digite seu token de acesso abaixo para liberar este bônus imediatamente.
         </p>
       </div>
 
@@ -95,42 +151,25 @@ export const BonusArea: React.FC<BonusAreaProps> = ({ session: propSession, onUp
             type="text"
             value={bonusTokenInput}
             onChange={(e) => setBonusTokenInput(e.target.value)}
-            placeholder={`Digite o token (Ex: ${defaultToken})`}
+            placeholder="Digite seu token de acesso"
             className="flex-1 px-4 py-3 bg-[#13111a] border border-white/10 rounded-xl text-xs text-white placeholder-gray-600 font-mono focus:outline-none focus:border-amber-400"
           />
           <button
+            type="button"
             onClick={() => handleActivateBonusToken()}
-            className="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold text-xs hover:from-amber-300 transition-all shrink-0 shadow-md"
+            disabled={isLoading}
+            className="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold text-xs hover:from-amber-300 transition-all shrink-0 shadow-md cursor-pointer disabled:opacity-50"
           >
-            Ativar
+            {isLoading ? 'Ativando...' : 'Ativar'}
           </button>
         </div>
 
         {tokenErrorMsg && (
           <p className="text-xs text-rose-400 font-medium">{tokenErrorMsg}</p>
         )}
-
-        <div className="pt-2 border-t border-white/5 space-y-1.5 text-left">
-          <span className="text-[10px] font-mono text-gray-400 block font-semibold">
-            ⚡ Ou teste rapidamente com os tokens abaixo:
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={() => handleActivateBonusToken(defaultToken)}
-              className="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-mono text-[10px] border border-amber-500/30 transition-all"
-            >
-              Ativar {defaultToken}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleActivateBonusToken('PARADISE-SUPREMO-9999')}
-              className="px-2.5 py-1 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 font-mono text-[10px] border border-orange-500/30 transition-all font-bold"
-            >
-              👑 Ativar TOKEN SUPREMO (Libera TUDO)
-            </button>
-          </div>
-        </div>
+        {tokenSuccessMsg && (
+          <p className="text-xs text-emerald-400 font-medium">{tokenSuccessMsg}</p>
+        )}
       </div>
     </div>
   );

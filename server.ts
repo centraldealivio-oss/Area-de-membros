@@ -23,18 +23,10 @@ interface StoredToken {
 }
 
 const tokenDatabase: Record<string, StoredToken> = {
-  'PARADISE-SUPREMO-9999': {
-    token: 'PARADISE-SUPREMO-9999',
-    tier: 'supremo',
-    customerName: 'Membro SUPREMO Master',
-    customerEmail: 'supremo@paradisepags.com',
-    createdAt: new Date().toISOString(),
-    source: 'preset'
-  },
   'TOKEN-BONUS1-BPM100': {
     token: 'TOKEN-BONUS1-BPM100',
     tier: 'bonus_1',
-    customerName: 'Aluno Bônus 1 (100 BPM)',
+    customerName: 'Aluno Bônus 1 (100 BPM + VIP)',
     customerEmail: 'bonus1@paradisepags.com',
     createdAt: new Date().toISOString(),
     source: 'preset'
@@ -42,7 +34,7 @@ const tokenDatabase: Record<string, StoredToken> = {
   'TOKEN-BONUS2-GATILHO': {
     token: 'TOKEN-BONUS2-GATILHO',
     tier: 'bonus_2',
-    customerName: 'Aluno Bônus 2 (Raio-X)',
+    customerName: 'Aluno Bônus 2 (Raio-X + VIP)',
     customerEmail: 'bonus2@paradisepags.com',
     createdAt: new Date().toISOString(),
     source: 'preset'
@@ -50,8 +42,16 @@ const tokenDatabase: Record<string, StoredToken> = {
   'TOKEN-BONUS3-VINCULO': {
     token: 'TOKEN-BONUS3-VINCULO',
     tier: 'bonus_3',
-    customerName: 'Aluno Bônus 3 (Blindagem)',
+    customerName: 'Aluno Bônus 3 (Blindagem + VIP)',
     customerEmail: 'bonus3@paradisepags.com',
+    createdAt: new Date().toISOString(),
+    source: 'preset'
+  },
+  'TOKEN-ALL-BONUSES': {
+    token: 'TOKEN-ALL-BONUSES',
+    tier: 'all_bonuses',
+    customerName: 'Aluno Todos Bônus + VIP',
+    customerEmail: 'allbonuses@paradisepags.com',
     createdAt: new Date().toISOString(),
     source: 'preset'
   },
@@ -63,27 +63,11 @@ const tokenDatabase: Record<string, StoredToken> = {
     createdAt: new Date().toISOString(),
     source: 'preset'
   },
-  'VIP-UPSELL-9999': {
-    token: 'VIP-UPSELL-9999',
-    tier: 'vip_upsell',
-    customerName: 'Comprador VIP (Área Fantasma)',
-    customerEmail: 'vip.fantasma@paradisepags.com',
-    createdAt: new Date().toISOString(),
-    source: 'preset'
-  },
   'PARADISE-STD-1234': {
     token: 'PARADISE-STD-1234',
     tier: 'standard',
     customerName: 'Cliente Padrão Paradise',
     customerEmail: 'comprador.padrao@paradisepags.com',
-    createdAt: new Date().toISOString(),
-    source: 'preset'
-  },
-  'DEMO-ADE-1001': {
-    token: 'DEMO-ADE-1001',
-    tier: 'standard',
-    customerName: 'Aluno Antes da Explosão',
-    customerEmail: 'aluno@exemplo.com',
     createdAt: new Date().toISOString(),
     source: 'preset'
   }

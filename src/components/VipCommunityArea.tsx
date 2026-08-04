@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserSession, CommunityPost, CommunityComment } from '../types';
+import { UserSession, CommunityPost, CommunityComment, UnlockedPermissions } from '../types';
 import {
   MessageSquare,
   Users,
@@ -19,7 +19,7 @@ import {
   Tag,
   ArrowRight
 } from 'lucide-react';
-import { validateTokenOnlineOrLocal, saveSession } from '../lib/tokenAuth';
+import { validateTokenOnlineOrLocal, saveSession, computePermissions } from '../lib/tokenAuth';
 
 interface VipCommunityAreaProps {
   session: UserSession;
@@ -116,7 +116,8 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
   session,
   onUpgradeSuccess
 }) => {
-  const isVip = session.tier === 'vip_upsell' || Boolean(session.permissions?.hasVipCommunity);
+  const perms = session.permissions || computePermissions(session.token, session.tier);
+  const isVip = session.tier === 'vip_upsell' || session.tier === 'supremo' || Boolean(perms.vipCommunity);
 
   // Upgrade token input for non-VIP
   const [tokenInput, setTokenInput] = useState('');
@@ -160,7 +161,7 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
     if (e) e.preventDefault();
     const cleanToken = (customToken || tokenInput).trim().toUpperCase();
     if (!cleanToken) {
-      setUpgradeError('Digite um token de acesso VIP válido.');
+      setUpgradeError('Digite um token de acesso válido.');
       return;
     }
 
@@ -169,15 +170,32 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
 
     try {
       const result = await validateTokenOnlineOrLocal(cleanToken);
-      if (result && (result.tier === 'vip_upsell' || result.permissions?.hasVipCommunity)) {
-        saveSession(result);
-        onUpgradeSuccess(result);
-      } else if (result) {
-        setUpgradeError('Este token não possui acesso à Comunidade VIP. Utilize o Token Supremo (PARADISE-SUPREMO-9999) ou o Token VIP Combo.');
+      if (result) {
+        const currentPerms = session.permissions || computePermissions(session.token, session.tier);
+        const newPerms = result.permissions || computePermissions(result.token, result.tier);
+
+        const mergedPerms: UnlockedPermissions = {
+          mainBook: true,
+          bonus1: currentPerms.bonus1 || newPerms.bonus1,
+          bonus2: currentPerms.bonus2 || newPerms.bonus2,
+          bonus3: currentPerms.bonus3 || newPerms.bonus3,
+          vipCommunity: currentPerms.vipCommunity || newPerms.vipCommunity,
+          isSupremo: currentPerms.isSupremo || newPerms.isSupremo
+        };
+
+        const updatedSession: UserSession = {
+          ...session,
+          token: result.token || cleanToken,
+          tier: (mergedPerms.bonus1 && mergedPerms.bonus2 && mergedPerms.bonus3) ? 'vip_upsell' : (result.tier !== 'standard' ? result.tier : session.tier),
+          permissions: mergedPerms
+        };
+
+        saveSession(updatedSession);
+        onUpgradeSuccess(updatedSession);
       } else {
         setUpgradeError('Token inválido. Verifique o código e tente novamente.');
       }
-    } catch (err) {
+    } catch {
       setUpgradeError('Ocorreu um erro ao validar o token.');
     } finally {
       setIsVerifying(false);
@@ -315,8 +333,8 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Ativar Acesso VIP na Comunidade</h3>
-              <p className="text-xs text-gray-400">Já possui seu Token VIP? Insira abaixo para liberar imediatamente:</p>
+              <h3 className="text-base font-bold text-white">Já adquiriu sua oferta especial do Módulo Black?</h3>
+              <p className="text-xs text-gray-400">Insira seu token de acesso abaixo para liberar a Comunidade VIP:</p>
             </div>
           </div>
 
@@ -354,28 +372,7 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
             </button>
           </form>
 
-          <div className="pt-3 border-t border-white/5 space-y-2 text-left">
-            <span className="text-[10px] font-mono text-gray-400 block font-semibold uppercase tracking-wider">
-              ⚡ Testar com Tokens de Acesso:
-            </span>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => handleActivateVip(undefined, 'PARADISE-SUPREMO-9999')}
-                className="px-2.5 py-1 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-[11px] font-bold transition-all flex items-center gap-1"
-              >
-                <Sparkles className="w-3 h-3 text-amber-400" />
-                <span>👑 Token Supremo (Libera Comunidade + Todos Bônus)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleActivateVip(undefined, 'PARADISE-VIP-8888')}
-                className="px-2.5 py-1 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 font-mono text-[11px] font-medium transition-all"
-              >
-                <span>💎 Token VIP Combo</span>
-              </button>
-            </div>
-          </div>
+
 
           <p className="text-[11px] text-gray-500 text-center font-mono pt-2">
             Ainda não possui a versão VIP Black? Adquira a liberação em <a href="https://mente.centraldealivio.com.br" target="_blank" rel="noreferrer" className="text-amber-400 underline">mente.centraldealivio.com.br</a>

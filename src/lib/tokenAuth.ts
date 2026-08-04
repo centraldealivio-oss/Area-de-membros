@@ -15,37 +15,6 @@ export function computePermissions(tokenRaw: string, tierRaw?: AccessTier): Unlo
   const token = (tokenRaw || '').trim().toUpperCase();
   const tier = tierRaw || 'standard';
 
-  // SUPREMO or VIP (Everything Unlocked)
-  if (
-    tier === 'supremo' ||
-    tier === 'vip_upsell' ||
-    token.includes('SUPREMO') ||
-    token.includes('MASTER') ||
-    token.includes('VIP') ||
-    token.includes('UPSELL')
-  ) {
-    return {
-      mainBook: true,
-      bonus1: true,
-      bonus2: true,
-      bonus3: true,
-      vipCommunity: true,
-      isSupremo: true
-    };
-  }
-
-  // All Bonuses tier
-  if (tier === 'all_bonuses' || token.includes('ALL-BONUSES') || token.includes('TODOS-BONUS')) {
-    return {
-      mainBook: true,
-      bonus1: true,
-      bonus2: true,
-      bonus3: true,
-      vipCommunity: false,
-      isSupremo: false
-    };
-  }
-
   // Specific Bonus or Combo Tokens
   const isBonus1 =
     tier === 'bonus_1' ||
@@ -76,30 +45,32 @@ export function computePermissions(tokenRaw: string, tierRaw?: AccessTier): Unlo
     token.includes('-B3') ||
     token.startsWith('B3-');
 
+  const isVipToken =
+    tier === 'vip_upsell' ||
+    tier === 'supremo' ||
+    token.includes('SUPREMO') ||
+    token.includes('VIP') ||
+    token.includes('UPSELL');
+
+  // Any bonus or explicit VIP token includes VIP Community automatically
+  const hasAnyBonus = isBonus1 || isBonus2 || isBonus3 || tier === 'all_bonuses' || isVipToken;
+
   return {
     mainBook: true,
-    bonus1: isBonus1,
-    bonus2: isBonus2,
-    bonus3: isBonus3,
-    vipCommunity: false,
+    bonus1: isBonus1 || isVipToken,
+    bonus2: isBonus2 || isVipToken,
+    bonus3: isBonus3 || isVipToken,
+    vipCommunity: hasAnyBonus,
     isSupremo: false
   };
 }
 
 // Preset demo tokens for instant manual testing or showcase
 export const DEMO_TOKENS: Record<string, TokenInfo> = {
-  'PARADISE-SUPREMO-9999': {
-    token: 'PARADISE-SUPREMO-9999',
-    tier: 'supremo',
-    customerName: 'Membro SUPREMO Master',
-    customerEmail: 'supremo@exemplo.com',
-    createdAt: new Date().toISOString(),
-    permissions: computePermissions('PARADISE-SUPREMO-9999', 'supremo')
-  },
   'TOKEN-BONUS1-BPM100': {
     token: 'TOKEN-BONUS1-BPM100',
     tier: 'bonus_1',
-    customerName: 'Comprador (Principal + Bônus 1)',
+    customerName: 'Comprador (Principal + Bônus 1 + VIP)',
     customerEmail: 'bonus1@exemplo.com',
     createdAt: new Date().toISOString(),
     permissions: computePermissions('TOKEN-BONUS1-BPM100', 'bonus_1')
@@ -107,7 +78,7 @@ export const DEMO_TOKENS: Record<string, TokenInfo> = {
   'TOKEN-BONUS2-GATILHO': {
     token: 'TOKEN-BONUS2-GATILHO',
     tier: 'bonus_2',
-    customerName: 'Comprador (Principal + Bônus 2)',
+    customerName: 'Comprador (Principal + Bônus 2 + VIP)',
     customerEmail: 'bonus2@exemplo.com',
     createdAt: new Date().toISOString(),
     permissions: computePermissions('TOKEN-BONUS2-GATILHO', 'bonus_2')
@@ -115,23 +86,15 @@ export const DEMO_TOKENS: Record<string, TokenInfo> = {
   'TOKEN-BONUS3-VINCULO': {
     token: 'TOKEN-BONUS3-VINCULO',
     tier: 'bonus_3',
-    customerName: 'Comprador (Principal + Bônus 3)',
+    customerName: 'Comprador (Principal + Bônus 3 + VIP)',
     customerEmail: 'bonus3@exemplo.com',
     createdAt: new Date().toISOString(),
     permissions: computePermissions('TOKEN-BONUS3-VINCULO', 'bonus_3')
   },
-  'TOKEN-BONUS12-COMBO': {
-    token: 'TOKEN-BONUS12-COMBO',
-    tier: 'standard',
-    customerName: 'Comprador (Principal + Bônus 1 e 2)',
-    customerEmail: 'combo12@exemplo.com',
-    createdAt: new Date().toISOString(),
-    permissions: computePermissions('TOKEN-BONUS12-B1-B2', 'standard')
-  },
   'TOKEN-ALL-BONUSES': {
     token: 'TOKEN-ALL-BONUSES',
     tier: 'all_bonuses',
-    customerName: 'Comprador (Principal + Bônus 1, 2 e 3)',
+    customerName: 'Comprador (Principal + Todos os Bônus + VIP)',
     customerEmail: 'allbonuses@exemplo.com',
     createdAt: new Date().toISOString(),
     permissions: computePermissions('TOKEN-ALL-BONUSES', 'all_bonuses')
