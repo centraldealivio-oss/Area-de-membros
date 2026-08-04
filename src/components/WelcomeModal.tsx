@@ -142,7 +142,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ session, onClose }) 
         </div>
 
         {/* Notice Banner */}
-        <div className="mb-4 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] font-medium text-center">
+        <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs sm:text-sm font-medium text-center leading-snug">
           ⚠️ <strong>Aviso:</strong> Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
         </div>
 

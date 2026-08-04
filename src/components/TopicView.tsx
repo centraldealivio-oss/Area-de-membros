@@ -16,6 +16,8 @@ interface TopicViewProps {
   onToggleComplete: (topicId: string) => void;
   onSelectNextTopic?: () => void;
   onBackToModules?: () => void;
+  isVipUser?: boolean;
+  onNavigateToBonuses?: () => void;
 }
 
 export const TopicView: React.FC<TopicViewProps> = ({
@@ -24,7 +26,9 @@ export const TopicView: React.FC<TopicViewProps> = ({
   isCompleted,
   onToggleComplete,
   onSelectNextTopic,
-  onBackToModules
+  onBackToModules,
+  isVipUser = false,
+  onNavigateToBonuses
 }) => {
   const [userNote, setUserNote] = useState('');
   const [noteSavedAlert, setNoteSavedAlert] = useState(false);

@@ -123,76 +123,50 @@ export const BonusArea: React.FC<BonusAreaProps> = ({ session: propSession, onUp
   };
 
   const renderLockedBonusView = (bonusNum: number, bonusTitle: string, defaultToken: string) => (
-    <div className="bg-[#100e15] border border-amber-500/30 rounded-3xl p-6 sm:p-10 text-center space-y-6 animate-fadeIn max-w-3xl mx-auto shadow-2xl">
-      <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400 shadow-lg">
-        <Lock className="w-8 h-8" />
-      </div>
-
-      <div>
-        <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
-          Bônus {bonusNum} Restrito
-        </span>
-        <h3 className="font-serif text-2xl font-bold text-white mb-2">
-          {bonusTitle}
-        </h3>
-        <p className="text-xs text-gray-300 max-w-xl mx-auto leading-relaxed font-medium mb-3">
-          Já adquiriu sua oferta especial do Módulo Black? Digite seu token de acesso abaixo para liberar este bônus imediatamente.
-        </p>
-
-        {/* Spam Email Notice */}
-        <div className="max-w-md mx-auto p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium text-left flex items-start space-x-2">
-          <span className="text-amber-400 shrink-0">⚠️</span>
-          <span>
-            <strong>Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!!!</strong>
+    <div className="space-y-6 animate-fadeIn max-w-2xl mx-auto">
+      <div className="bg-[#100e15] border border-amber-500/20 rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow-2xl">
+        <div>
+          <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest block mb-1">
+            Bônus {bonusNum} Restrito
           </span>
-        </div>
-      </div>
-
-      <div className="bg-[#0b0a0e] border border-white/10 p-6 rounded-2xl max-w-md mx-auto space-y-3">
-        <div className="flex items-center space-x-2 text-xs font-bold text-gray-200">
-          <KeyRound className="w-4 h-4 text-amber-400" />
-          <span>Ativar Bônus {bonusNum} com seu Token</span>
-        </div>
-
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={bonusTokenInput}
-            onChange={(e) => setBonusTokenInput(e.target.value)}
-            placeholder="Digite seu token de acesso"
-            className="flex-1 px-4 py-3 bg-[#13111a] border border-white/10 rounded-xl text-xs text-white placeholder-gray-600 font-mono focus:outline-none focus:border-amber-400"
-          />
-          <button
-            type="button"
-            onClick={() => handleActivateBonusToken()}
-            disabled={isLoading}
-            className="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold text-xs hover:from-amber-300 transition-all shrink-0 shadow-md cursor-pointer disabled:opacity-50"
-          >
-            {isLoading ? 'Ativando...' : 'Ativar'}
-          </button>
-        </div>
-
-        {tokenErrorMsg && (
-          <p className="text-xs text-rose-400 font-medium">{tokenErrorMsg}</p>
-        )}
-        {tokenSuccessMsg && (
-          <p className="text-xs text-emerald-400 font-medium">{tokenSuccessMsg}</p>
-        )}
-
-        {/* Redirect Link */}
-        <div className="pt-3 border-t border-white/5 text-center space-y-1">
-          <a
-            href="https://mente.centraldealivio.com.br"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center space-x-1.5 text-xs text-amber-400 hover:text-amber-300 font-bold transition-colors"
-          >
-            <span>Ainda não adquiriu este bônus? Adquirir oferta especial</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </a>
-          <p className="text-[10px] text-amber-300/80 font-medium">
-            Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
+          <h3 className="font-serif text-xl sm:text-2xl font-bold text-white mb-2">
+            {bonusTitle}
+          </h3>
+          <p className="text-xs text-gray-300 max-w-lg mx-auto leading-relaxed">
+            Caso já tenha adquirido seu bônus, insira seu token abaixo para desbloquear este módulo instantaneamente:
           </p>
+        </div>
+
+        <div className="bg-[#0b0a0e] border border-white/10 p-5 rounded-2xl max-w-md mx-auto space-y-3">
+          <div className="flex items-center space-x-2 text-xs font-bold text-gray-200">
+            <KeyRound className="w-4 h-4 text-amber-400" />
+            <span>Ativar Bônus {bonusNum} com seu Token</span>
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={bonusTokenInput}
+              onChange={(e) => setBonusTokenInput(e.target.value)}
+              placeholder="Digite seu token de acesso"
+              className="flex-1 px-4 py-3 bg-[#13111a] border border-white/10 rounded-xl text-xs text-white placeholder-gray-600 font-mono focus:outline-none focus:border-amber-400"
+            />
+            <button
+              type="button"
+              onClick={() => handleActivateBonusToken()}
+              disabled={isLoading}
+              className="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold text-xs hover:from-amber-300 transition-all shrink-0 shadow-md cursor-pointer disabled:opacity-50"
+            >
+              {isLoading ? 'Ativando...' : 'Ativar'}
+            </button>
+          </div>
+
+          {tokenErrorMsg && (
+            <p className="text-xs text-rose-400 font-medium">{tokenErrorMsg}</p>
+          )}
+          {tokenSuccessMsg && (
+            <p className="text-xs text-emerald-400 font-medium">{tokenSuccessMsg}</p>
+          )}
         </div>
       </div>
     </div>

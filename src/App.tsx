@@ -25,6 +25,7 @@ import { GhostAreaUpsell } from './components/GhostAreaUpsell';
 import { BonusArea } from './components/BonusArea';
 import { VipCommunityArea } from './components/VipCommunityArea';
 import { VercelDeploymentGuideModal } from './components/VercelDeploymentGuideModal';
+import { WhatsAppButton } from './components/WhatsAppButton';
 import { MAIN_COVER_IMAGE, FALLBACK_COVER_IMAGE } from './data/bonusData';
 import { Sparkles, BookOpen, Flame, Lock, ArrowUpRight } from 'lucide-react';
 
@@ -124,7 +125,10 @@ export default function App() {
   // If no active authenticated session, show Login Token screen
   if (!session) {
     return (
-      <LoginScreen onLoginSuccess={handleLoginSuccess} />
+      <>
+        <LoginScreen onLoginSuccess={handleLoginSuccess} />
+        <WhatsAppButton />
+      </>
     );
   }
 
@@ -218,23 +222,46 @@ export default function App() {
                 onSelectTopic={handleSelectTopic}
               />
 
-              {/* VIP Upsell Teaser Banner in Sidebar */}
+              {/* VIP Upsell Teaser Banners in Sidebar */}
               {!isVipUser && (
-                <div className="bg-gradient-to-br from-amber-500/10 via-[#121214] to-[#0a0a0b] border border-amber-500/20 p-5 rounded-3xl space-y-3 shadow-lg shadow-amber-500/5">
-                  <div className="flex items-center space-x-2 text-amber-400">
-                    <Lock className="w-4 h-4 text-amber-500" />
-                    <span className="font-bold text-xs uppercase tracking-wider">Área Black Edition VIP</span>
+                <div className="space-y-4">
+                  {/* Card 1: Navegação interna para a Área Black Edition */}
+                  <div className="bg-gradient-to-br from-amber-500/10 via-[#121214] to-[#0a0a0b] border border-amber-500/20 p-5 rounded-3xl space-y-3 shadow-lg shadow-amber-500/5">
+                    <div className="flex items-center space-x-2 text-amber-400">
+                      <Lock className="w-4 h-4 text-amber-500 shrink-0" />
+                      <span className="font-bold text-xs uppercase tracking-wider text-amber-400">Área Black Edition VIP</span>
+                    </div>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Você possui o plano Padrão. Quer acessar o Protocolo 100 BPM, Raio-X do Gatilho e Blindagem do Vínculo?
+                    </p>
+                    <button
+                      onClick={() => setActiveTab('bonuses')}
+                      className="w-full py-2.5 px-3 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30 transition-all flex items-center justify-center space-x-1.5 text-center cursor-pointer"
+                    >
+                      <span>Ver Área Black Edition</span>
+                      <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                    </button>
                   </div>
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    Você possui o plano Padrão. Quer acessar o Protocolo 100 BPM, Raio-X do Gatilho e Blindagem do Vínculo?
-                  </p>
-                  <button
-                    onClick={() => setActiveTab('bonuses')}
-                    className="w-full py-2.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30 transition-all flex items-center justify-center space-x-1"
-                  >
-                    <span>Ver Área Black Edition</span>
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </button>
+
+                  {/* Card 2: Link externo para adquirir o bônus */}
+                  <div className="bg-gradient-to-br from-orange-500/10 via-[#121214] to-[#0a0a0b] border border-orange-500/20 p-5 rounded-3xl space-y-3 shadow-lg shadow-orange-500/5">
+                    <div className="flex items-center space-x-2 text-orange-400">
+                      <Sparkles className="w-4 h-4 text-orange-500 shrink-0" />
+                      <span className="font-bold text-xs uppercase tracking-wider text-orange-400">Pacote de Bônus Exclusivos</span>
+                    </div>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Ainda não adquiriu os bônus? Adquira a oferta especial para desbloquear todos os conteúdos complementares.
+                    </p>
+                    <a
+                      href="https://mente.centraldealivio.com.br/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 px-3 rounded-2xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 text-xs font-bold border border-orange-500/30 transition-all flex items-center justify-center space-x-1.5 text-center cursor-pointer"
+                    >
+                      <span>Adquirir Oferta dos Bônus</span>
+                      <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                    </a>
+                  </div>
                 </div>
               )}
 
@@ -248,6 +275,8 @@ export default function App() {
                 isCompleted={completedTopics.includes(selectedTopic.id)}
                 onToggleComplete={handleToggleTopicComplete}
                 onSelectNextTopic={handleNextTopic}
+                isVipUser={isVipUser}
+                onNavigateToBonuses={() => setActiveTab('bonuses')}
                 onBackToModules={() => {
                   const element = document.getElementById('modules-directory-list');
                   if (element) {
@@ -301,6 +330,9 @@ export default function App() {
           </span>
         </div>
       </footer>
+
+      {/* Floating WhatsApp Support Button on all areas */}
+      <WhatsAppButton />
 
     </div>
   );

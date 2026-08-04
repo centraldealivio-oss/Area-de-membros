@@ -339,9 +339,9 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
           </div>
 
           {/* Spam Email Notice */}
-          <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium flex items-start space-x-2">
-            <span className="text-amber-400 shrink-0">⚠️</span>
-            <span>
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm font-medium flex items-start space-x-2">
+            <span className="text-amber-400 shrink-0 text-base">⚠️</span>
+            <span className="leading-snug">
               <strong>Importante:</strong> Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
             </span>
           </div>
@@ -387,7 +387,7 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
                 mente.centraldealivio.com.br
               </a>
             </p>
-            <p className="text-[10px] text-amber-300/80 font-medium">
+            <p className="text-xs sm:text-sm text-amber-300 font-semibold">
               ⚠️ Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
             </p>
           </div>

@@ -102,9 +102,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             </p>
 
             {/* Email / Spam Alert Notice */}
-            <div className="mb-5 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium flex items-start space-x-2.5 shadow-sm">
-              <Mail className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <span className="leading-tight">
+            <div className="mb-5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm font-medium flex items-start space-x-2.5 shadow-sm">
+              <Mail className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <span className="leading-snug">
                 <strong>Importante:</strong> Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
               </span>
             </div>
@@ -150,8 +150,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
           </div>
 
-          {/* Direct Website Link */}
-          <div className="mt-8 text-center pt-6 border-t border-white/5 space-y-2">
+          {/* Direct Website & WhatsApp Support Links */}
+          <div className="mt-8 text-center pt-6 border-t border-white/5 space-y-3">
             <a
               href="https://mente.centraldealivio.com.br"
               target="_blank"
@@ -161,7 +161,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               <span>Ainda não possui acesso? Adquirir em mente.centraldealivio.com.br</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
-            <p className="text-[11px] text-amber-300/80 font-medium">
+
+            <div>
+              <a
+                href="https://wa.me/5511926102769?text=Ol%C3%A1!%20Estou%20na%20p%C3%A1gina%20de%20login%20e%20preciso%20de%20ajuda%20com%20meu%20token."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[#25D366] text-xs font-bold transition-all"
+              >
+                <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse"></span>
+                <span>Dúvidas ou Suporte? WhatsApp (11) 92610-2769</span>
+              </a>
+            </div>
+
+            <p className="text-xs sm:text-sm text-amber-300 font-semibold">
               ⚠️ Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
             </p>
           </div>
