@@ -465,7 +465,6 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
                   <option value="geral">Geral / Dúvida do Audiobook</option>
                   <option value="bpm100">Técnica dos 100 BPM & Controle</option>
                   <option value="neurociencia">Neurociência dos Conflitos</option>
-                  <option value="scripts">Scripts de Desarmamento</option>
                   <option value="relatos">Relato de Transformação</option>
                 </select>
               </div>
@@ -545,7 +544,6 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
             { id: 'todos', label: 'Todos os Tópicos' },
             { id: 'bpm100', label: 'Técnica 100 BPM' },
             { id: 'neurociencia', label: 'Neurociência' },
-            { id: 'scripts', label: 'Scripts' },
             { id: 'relatos', label: 'Relatos de Sucesso' },
             { id: 'geral', label: 'Geral' }
           ].map(cat => (
