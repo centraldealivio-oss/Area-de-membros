@@ -135,9 +135,17 @@ export const BonusArea: React.FC<BonusAreaProps> = ({ session: propSession, onUp
         <h3 className="font-serif text-2xl font-bold text-white mb-2">
           {bonusTitle}
         </h3>
-        <p className="text-xs text-gray-300 max-w-xl mx-auto leading-relaxed font-medium">
+        <p className="text-xs text-gray-300 max-w-xl mx-auto leading-relaxed font-medium mb-3">
           Já adquiriu sua oferta especial do Módulo Black? Digite seu token de acesso abaixo para liberar este bônus imediatamente.
         </p>
+
+        {/* Spam Email Notice */}
+        <div className="max-w-md mx-auto p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium text-left flex items-start space-x-2">
+          <span className="text-amber-400 shrink-0">⚠️</span>
+          <span>
+            <strong>Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!!!</strong>
+          </span>
+        </div>
       </div>
 
       <div className="bg-[#0b0a0e] border border-white/10 p-6 rounded-2xl max-w-md mx-auto space-y-3">
@@ -170,6 +178,22 @@ export const BonusArea: React.FC<BonusAreaProps> = ({ session: propSession, onUp
         {tokenSuccessMsg && (
           <p className="text-xs text-emerald-400 font-medium">{tokenSuccessMsg}</p>
         )}
+
+        {/* Redirect Link */}
+        <div className="pt-3 border-t border-white/5 text-center space-y-1">
+          <a
+            href="https://mente.centraldealivio.com.br"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center space-x-1.5 text-xs text-amber-400 hover:text-amber-300 font-bold transition-colors"
+          >
+            <span>Ainda não adquiriu este bônus? Adquirir oferta especial</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+          <p className="text-[10px] text-amber-300/80 font-medium">
+            Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
+          </p>
+        </div>
       </div>
     </div>
   );

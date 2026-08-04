@@ -141,6 +141,11 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ session, onClose }) 
           </div>
         </div>
 
+        {/* Notice Banner */}
+        <div className="mb-4 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] font-medium text-center">
+          ⚠️ <strong>Aviso:</strong> Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
+        </div>
+
         {/* Start Button */}
         <button
           onClick={onClose}

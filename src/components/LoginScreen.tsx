@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { validateTokenOnlineOrLocal, PARADISE_CHECKOUT_URL } from '../lib/tokenAuth';
 import { UserSession } from '../types';
 import { MAIN_COVER_IMAGE, FALLBACK_COVER_IMAGE } from '../data/bonusData';
-import { KeyRound, ShieldAlert, ArrowRight, ExternalLink, Sparkles, CheckCircle2, Flame, Lock } from 'lucide-react';
+import { KeyRound, ShieldAlert, ArrowRight, ExternalLink, Sparkles, CheckCircle2, Flame, Lock, Mail } from 'lucide-react';
 
 interface LoginScreenProps {
   onLoginSuccess: (session: UserSession, isFirstTime: boolean) => void;
@@ -97,9 +97,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
               Insira seu Token de Acesso
             </h2>
-            <p className="text-xs text-gray-400 mb-6">
+            <p className="text-xs text-gray-400 mb-4">
               Digite a chave enviada para seu e-mail ou gerada na confirmação da sua compra.
             </p>
+
+            {/* Email / Spam Alert Notice */}
+            <div className="mb-5 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium flex items-start space-x-2.5 shadow-sm">
+              <Mail className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <span className="leading-tight">
+                <strong>Importante:</strong> Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
+              </span>
+            </div>
 
             {/* Input Form */}
             <form onSubmit={(e) => { e.preventDefault(); handleValidate(); }} className="space-y-4">
@@ -143,7 +151,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           </div>
 
           {/* Direct Website Link */}
-          <div className="mt-8 text-center pt-6 border-t border-white/5">
+          <div className="mt-8 text-center pt-6 border-t border-white/5 space-y-2">
             <a
               href="https://mente.centraldealivio.com.br"
               target="_blank"
@@ -153,6 +161,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               <span>Ainda não possui acesso? Adquirir em mente.centraldealivio.com.br</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
+            <p className="text-[11px] text-amber-300/80 font-medium">
+              ⚠️ Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
+            </p>
           </div>
 
         </div>

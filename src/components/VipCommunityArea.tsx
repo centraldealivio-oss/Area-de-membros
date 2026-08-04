@@ -329,13 +329,21 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
         {/* Token Activation Box */}
         <div className="p-6 sm:p-8 rounded-3xl bg-[#121214] border border-white/10 max-w-xl mx-auto shadow-xl space-y-4">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base font-bold text-white">Já adquiriu sua oferta especial do Módulo Black?</h3>
               <p className="text-xs text-gray-400">Insira seu token de acesso abaixo para liberar a Comunidade VIP:</p>
             </div>
+          </div>
+
+          {/* Spam Email Notice */}
+          <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium flex items-start space-x-2">
+            <span className="text-amber-400 shrink-0">⚠️</span>
+            <span>
+              <strong>Importante:</strong> Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
+            </span>
           </div>
 
           <form onSubmit={handleActivateVip} className="space-y-3">
@@ -359,7 +367,7 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
             <button
               type="submit"
               disabled={isVerifying}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-bold text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center space-x-2"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-bold text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center space-x-2 cursor-pointer"
             >
               {isVerifying ? (
                 <span>Validando Token...</span>
@@ -372,11 +380,17 @@ export const VipCommunityArea: React.FC<VipCommunityAreaProps> = ({
             </button>
           </form>
 
-
-
-          <p className="text-[11px] text-gray-500 text-center font-mono pt-2">
-            Ainda não possui a versão VIP Black? Adquira a liberação em <a href="https://mente.centraldealivio.com.br" target="_blank" rel="noreferrer" className="text-amber-400 underline">mente.centraldealivio.com.br</a>
-          </p>
+          <div className="pt-3 border-t border-white/5 text-center space-y-1">
+            <p className="text-xs text-gray-400">
+              Ainda não possui a versão VIP Black? Adquira a liberação em{' '}
+              <a href="https://mente.centraldealivio.com.br" target="_blank" rel="noreferrer" className="text-amber-400 font-bold underline hover:text-amber-300">
+                mente.centraldealivio.com.br
+              </a>
+            </p>
+            <p className="text-[10px] text-amber-300/80 font-medium">
+              ⚠️ Checar e-mail para recebimento do token caso tenha adquirido nosso bônus, confira o spam!
+            </p>
+          </div>
         </div>
 
         {/* Blurred Preview Grid */}
